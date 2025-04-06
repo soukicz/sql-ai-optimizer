@@ -72,6 +72,7 @@ class StateDatabase {
         string $digest,
         string $schema,
         string $queryText,
+        string $querySample,
         string $impactDescription
     ): void {
         $this->connection->query('INSERT INTO query', [
@@ -80,6 +81,7 @@ class StateDatabase {
             'group_id' => $groupId,
             'schema' => $schema,
             'query_text' => $queryText,
+            'query_sample' => $querySample,
             'impact_description' => $impactDescription,
         ]);
     }
@@ -94,7 +96,7 @@ class StateDatabase {
         $data = [];
 
         if ($queryText !== null) {
-            $data['query_text'] = $queryText;
+            $data['query_sample'] = $queryText;
         }
         if ($explainResult !== null) {
             $data['explain_result'] = $explainResult;
@@ -128,6 +130,15 @@ class StateDatabase {
 
     public function getQuery(int $id): ?array {
         $result = $this->connection->query('SELECT * FROM query WHERE id = %i', $id)->fetch();
+        if ($result) {
+            return (array)$result;
+        }
+
+        return null;
+    }
+
+    public function getGroup(int $id): ?array {
+        $result = $this->connection->query('SELECT * FROM [group] WHERE id = %i', $id)->fetch();
         if ($result) {
             return (array)$result;
         }

@@ -30,4 +30,13 @@ class AnalyzedDatabase {
     public function getConnection(): Connection {
         return $this->connection;
     }
+
+    public function getQueryText(string $digest, string $schema): ?string {
+        $sql = $this->connection->query('SELECT sql_text FROM performance_schema.events_statements_history WHERE digest=%s', $digest, ' AND current_schema = %s', $schema)->fetchSingle();
+        if (!$sql) {
+            $sql = $this->connection->query('SELECT sql_text FROM performance_schema.events_statements_history_long WHERE digest=%s', $digest, ' AND current_schema = %s', $schema)->fetchSingle();
+        }
+
+        return $sql;
+    }
 }

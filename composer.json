@@ -19,7 +19,9 @@
         "dibi/dibi": "^5.0",
         "symfony/dotenv": "^7.2",
         "symfony/cache": "^7.2",
-        "twig/twig": "^3.20"
+        "twig/twig": "^3.20",
+        "league/commonmark": "^2.6",
+        "spatie/commonmark-highlighter": "^3.0"
     },
     "config": {
         "allow-plugins": {

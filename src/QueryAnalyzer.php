@@ -23,16 +23,11 @@ readonly class QueryAnalyzer {
     }
 
     public function analyzeQuery(int $queryId, CandidateQuery $candidateQuery): PromiseInterface {
-        $rawSql = $this->analyzedDatabase->getConnection()
-        ->select('sql_text')
-        ->from('performance_schema.events_statements_history')
-        ->where('digest=%s', $candidateQuery->getDigest())
-        ->where('current_schema = %s', $candidateQuery->getSchema())
-        ->limit(1)
-        ->fetchSingle();
+        $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
 
         $explainJson = null;
         if ($rawSql) {
+            $this->analyzedDatabase->getConnection()->query('USE %n', $candidateQuery->getSchema());
             $explainJson = $this->analyzedDatabase->getConnection()
             ->query('EXPLAIN format=json %sql', $rawSql)
             ->fetchSingle();
@@ -69,7 +64,11 @@ readonly class QueryAnalyzer {
         ### Schema
         EOT;
 
-        foreach ($this->getTablesFromSelectQuery($promptSql) as $table => $schema) {
+        $this->analyzedDatabase->getConnection()->query('USE %n', $candidateQuery->getSchema());
+        foreach ($this->getTablesFromSelectQuery($promptSql) as $table) {
+            $schema = $this->analyzedDatabase->getConnection()
+                ->query('SHOW CREATE TABLE %n', $table)->fetch()['Create Table'];
+
             $prompt .= "\n\n#### $table\n```\n$schema\n```\n";
         }
 

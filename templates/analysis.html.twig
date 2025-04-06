@@ -4,7 +4,7 @@
 
 {% block content %}
     <div class="mb-4">
-        <a href="{{ path('index') }}" class="btn btn-outline-secondary">
+        <a href="/" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Back to Query List
         </a>
     </div>
@@ -17,19 +17,27 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h5>Schema</h5>
-                    <p class="text-muted">{{ query.schema_name }}</p>
+                    <p class="text-muted">{{ query.schema }}</p>
                 </div>
                 <div class="col-md-6">
                     <h5>Group</h5>
-                    <p class="text-muted">{{ query.group_name }}</p>
+                    <p class="text-muted">{{ group.name }}</p>
                 </div>
             </div>
 
             <h5>Description</h5>
-            <p class="mb-4">{{ query.description }}</p>
+            <p class="mb-4">{{ query.impact_description }}</p>
 
             <h5>SQL Query</h5>
-            <pre class="sql mb-4">{{ query.sql }}</pre>
+            <pre class="sql p-3 bg-light text-dark rounded mb-4">{{ sql|raw }}</pre>
+
+            {% if query.explain_result is empty %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Could not retrive sample of real query and analysis is missing EXPLAIN result.
+                </div>
+            {% endif %}
+            
         </div>
     </div>
 
@@ -46,6 +54,7 @@
 {% endblock %}
 
 {% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <style>
     .markdown-content h1 { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1rem; }
     .markdown-content h2 { font-size: 1.5rem; margin-top: 1.2rem; margin-bottom: 0.8rem; }
@@ -60,4 +69,17 @@
     .markdown-content table th { background-color: #f1f3f5; }
     .markdown-content blockquote { padding: 0.5rem 1rem; margin-bottom: 1rem; border-left: 4px solid #ced4da; color: #6c757d; }
 </style>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.markdown-content pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    });
+</script>
 {% endblock %} 
