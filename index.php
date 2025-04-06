@@ -4,6 +4,7 @@ use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
 use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\SqlAiOptimizer\LLMFileLogger;
+use Soukicz\SqlAiOptimizer\StateDatabase;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
@@ -68,6 +69,29 @@ class Kernel extends BaseKernel {
         $container->services()
             ->set(LLMChainClient::class)
             ->arg('$logger', new Reference(LLMFileLogger::class))
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
+            ->set(StateDatabase::class)
+            ->arg('$databasePath', '%env(default:state.sqlite:SQLITE_DATABASE_PATH)%')
+            ->autowire()
+            ->autoconfigure();
+
+        // Register Twig
+        $container->services()
+            ->set('twig.loader', \Twig\Loader\FilesystemLoader::class)
+            ->arg('$paths', [__DIR__ . '/templates'])
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
+            ->set(\Twig\Environment::class)
+            ->arg('$loader', new Reference('twig.loader'))
+            ->arg('$options', [
+                'cache' => __DIR__ . '/cache/twig',
+                'debug' => '%env(bool:APP_DEBUG)%',
+            ])
             ->autowire()
             ->autoconfigure();
 

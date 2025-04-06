@@ -42,7 +42,7 @@ readonly class AI {
                                 'description' => 'Group name',
                             ],
                         ],
-                            'desription' => [
+                        'desription' => [
                                 'type' => 'string',
                                 'description' => 'Description of performance impact type of the group',
                             ],
