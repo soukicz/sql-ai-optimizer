@@ -22,8 +22,16 @@ readonly class QueryAnalyzer {
     ) {
     }
 
-    public function analyzeQuery(int $queryId, CandidateQuery $candidateQuery): PromiseInterface {
-        $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
+    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery): PromiseInterface {
+        if (!$rawSql) {
+            $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
+            if ($rawSql) {
+                $this->stateDatabase->updateQuerySample(
+                    queryId: $queryId,
+                    querySample: $rawSql
+                );
+            }
+        }
 
         $explainJson = null;
         if ($rawSql) {

@@ -72,7 +72,7 @@ class StateDatabase {
         string $digest,
         string $schema,
         string $queryText,
-        string $querySample,
+        ?string $querySample,
         string $impactDescription
     ): void {
         $this->connection->query('INSERT INTO query', [
@@ -84,6 +84,13 @@ class StateDatabase {
             'query_sample' => $querySample,
             'impact_description' => $impactDescription,
         ]);
+    }
+
+    public function updateQuerySample(int $queryId, string $querySample): void {
+        $this->connection->update('query', [
+            'query_sample' => $querySample,
+        ])->where('id=%i', $queryId)
+        ->execute();
     }
 
     public function updateQuery(
