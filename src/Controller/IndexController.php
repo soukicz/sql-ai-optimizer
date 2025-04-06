@@ -3,7 +3,7 @@
 namespace Soukicz\SqlAiOptimizer\Controller;
 
 use Dibi\Helpers;
-use Soukicz\SqlAiOptimizer\AI;
+use Soukicz\SqlAiOptimizer\QuerySelector;
 use Soukicz\SqlAiOptimizer\AnalyzedDatabase;
 use Soukicz\SqlAiOptimizer\StateDatabase;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 class IndexController {
     public function __construct(
         private AnalyzedDatabase $database,
-        private AI $ai,
+        private QuerySelector $ai,
         private Environment $twig,
         private StateDatabase $stateDatabase,
         private UrlGeneratorInterface $router
@@ -92,23 +92,11 @@ class IndexController {
         ]);
     }
 
-    #[Route('/submit-prompt', name: 'submit_prompt', methods: ['POST'])]
-    public function submitPrompt(Request $request): Response {
-        $prompt = $request->request->get('prompt');
+    #[Route('/run/1/analyze', name: 'run.analyze', methods: ['POST'])]
+    public function analyzePrompt(Request $request): Response {
+        sleep(5);
 
-        if (empty($prompt)) {
-            // If no prompt provided, redirect back to index
-            return new RedirectResponse($this->router->generate('index'));
-        }
-
-        // Create a new run
-        $runId = $this->stateDatabase->createRun();
-
-        // Generate candidate queries based on the prompt
-        $this->ai->generateCandidateQueries($prompt, $runId);
-
-        // Redirect to run detail
-        return new RedirectResponse($this->router->generate('run_detail', ['id' => $runId]));
+        return new JsonResponse();
     }
 
     #[Route('/query/{id}', name: 'query_analysis')]

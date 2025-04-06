@@ -15,7 +15,7 @@ use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
 use Soukicz\SqlAiOptimizer\Result\CandidateResult;
 use Soukicz\SqlAiOptimizer\Tool\PerfomanceSchemaQueryTool;
 
-readonly class AI {
+readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
         private AnthropicClient $anthropicClient,
