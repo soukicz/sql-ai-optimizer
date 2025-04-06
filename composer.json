@@ -1,0 +1,28 @@
+{
+    "name": "soukicz/sql-ai-optimizer",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Soukicz\\SqlAiOptimizer\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Petr Soukup",
+            "email": "soukup@simplia.cz"
+        }
+    ],
+    "require": {
+        "soukicz/llm": "dev-master",
+        "symfony/framework-bundle": "^7.2",
+        "symfony/runtime": "^7.2",
+        "dibi/dibi": "^5.0",
+        "symfony/dotenv": "^7.2",
+        "symfony/cache": "^7.2"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
+    }
+}

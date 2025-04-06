@@ -1,0 +1,6 @@
+/var/
+/log/
+/cache/
+/run.bat
+/.env
+/vendor/
