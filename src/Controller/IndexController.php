@@ -3,8 +3,10 @@
 namespace Soukicz\SqlAiOptimizer\Controller;
 
 use Dibi\Helpers;
+use Soukicz\SqlAiOptimizer\QueryAnalyzer;
 use Soukicz\SqlAiOptimizer\QuerySelector;
 use Soukicz\SqlAiOptimizer\AnalyzedDatabase;
+use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\StateDatabase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,11 +16,13 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\Session;
+use GuzzleHttp\Promise\Each;
 
 class IndexController {
     public function __construct(
         private AnalyzedDatabase $database,
-        private QuerySelector $ai,
+        private QuerySelector $querySelector,
+        private QueryAnalyzer $queryAnalyzer,
         private Environment $twig,
         private StateDatabase $stateDatabase,
         private UrlGeneratorInterface $router
@@ -65,7 +69,7 @@ class IndexController {
 
     #[Route('/new-run', name: 'run.new', methods: ['POST'])]
     public function newRun(Request $request): Response {
-        $results = $this->ai->getCandidateQueries();
+        $results = $this->querySelector->getCandidateQueries();
 
         $this->stateDatabase->getConnection()->begin();
         $runId = $this->stateDatabase->createRun($request->request->get('input'), $results->getDescription());
@@ -94,27 +98,24 @@ class IndexController {
 
     #[Route('/run/1/analyze', name: 'run.analyze', methods: ['POST'])]
     public function analyzePrompt(Request $request): Response {
-        sleep(5);
+        $queryIds = $request->request->all('query_ids');
 
-        return new JsonResponse();
-    }
+        $promises = [];
+        foreach ($queryIds as $queryId) {
+            $queryData = $this->stateDatabase->getQuery($queryId);
+            $queryObject = new CandidateQuery(
+                schema: $queryData['schema'],
+                digest: $queryData['digest'],
+                queryText: $queryData['query_text'],
+                impactDescription: $queryData['impact_description'],
+            );
 
-    #[Route('/query/{id}', name: 'query_analysis')]
-    public function queryAnalysis(int $id): Response {
-        $query = $this->stateDatabase->getQuery($id);
-
-        if (!$query) {
-            // Handle non-existent query, redirect to index
-            return new RedirectResponse($this->router->generate('index'));
+            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryObject);
         }
 
-        $recommendations = $this->ai->getQueryRecommendations($id);
+        // Process 5 promises concurrently
+        Each::ofLimit($promises, 5)->wait();
 
-        return new Response(
-            $this->twig->render('analysis.html.twig', [
-                'query' => $query,
-                'recommendations' => $recommendations,
-            ])
-        );
+        return new JsonResponse();
     }
 }

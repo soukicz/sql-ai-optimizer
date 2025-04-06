@@ -85,11 +85,10 @@ class StateDatabase {
     }
 
     public function updateQuery(
-        int $groupId,
-        string $digest,
+        int $queryId,
         ?string $queryText = null,
-        ?string $fixInput = null,
-        ?string $fixOutput = null,
+        string $fixInput = null,
+        string $fixOutput = null,
         ?string $explainResult = null
     ): void {
         $data = [];
@@ -97,24 +96,13 @@ class StateDatabase {
         if ($queryText !== null) {
             $data['query_text'] = $queryText;
         }
-
-        if ($fixInput !== null) {
-            $data['fix_input'] = $fixInput;
-        }
-
-        if ($fixOutput !== null) {
-            $data['fix_output'] = $fixOutput;
-        }
-
         if ($explainResult !== null) {
             $data['explain_result'] = $explainResult;
         }
+        $data['fix_input'] = $fixInput;
+        $data['fix_output'] = $fixOutput;
 
-        if (empty($data)) {
-            return;
-        }
-
-        $this->connection->query('UPDATE query SET', $data, 'WHERE digest = %s', $digest, ' AND group_di = %i', $groupId);
+        $this->connection->update('query', $data)->where('id=%i', $queryId)->execute();
     }
 
     public function getRuns(): array {
@@ -140,7 +128,10 @@ class StateDatabase {
 
     public function getQuery(int $id): ?array {
         $result = $this->connection->query('SELECT * FROM query WHERE id = %i', $id)->fetch();
+        if ($result) {
+            return (array)$result;
+        }
 
-        return $result ?: null;
+        return null;
     }
 }
