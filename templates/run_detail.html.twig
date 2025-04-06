@@ -16,18 +16,25 @@
             <h2 class="h5 mb-0">Run Information</h2>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Created:</strong> {{ run.created_at|date('Y-m-d H:i:s') }}</p>
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <p class="mb-0"><strong>Created:</strong> {{ run.created_at|date('Y-m-d H:i:s') }}</p>
                 </div>
-                <div class="col-md-6">
-                    <p><strong>Total Queries:</strong> <span class="badge bg-primary">{{ queries|length }}</span></p>
+                <div class="col-md-4">
+                    <p class="mb-0"><strong>Total Queries:</strong> <span class="badge bg-primary">{{ queries|length }}</span></p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button type="submit" form="analyze-form" class="btn btn-primary">
+                        <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
+                    </button>
                 </div>
             </div>
-            <div class="text-end mt-2">
-                <button type="submit" form="analyze-form" class="btn btn-primary">
-                    <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
-                </button>
+            <div class="row mt-2">
+                <div class="col-12 text-end">
+                    <span class="small text-muted">
+                        <i class="bi bi-info-circle me-1"></i> Analysis may take several minutes. Multiple queries can be analyzed in parallel.
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -62,6 +69,10 @@
                                     </label>
                                 </div>
                                 
+                                <div class="mt-2 small text-muted">
+                                    <i class="bi bi-database me-1"></i> Schema: <strong>{{ query.schema }}</strong>
+                                </div>
+                                
                                 <div class="mt-2">
                                     <a class="btn btn-sm btn-link text-decoration-none" data-bs-toggle="collapse" href="#queryCode-{{ query.id }}">
                                         <i class="bi bi-code-slash me-1"></i> View SQL
@@ -87,6 +98,11 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
                 </button>
+                <div class="mt-2">
+                    <span class="small text-muted">
+                        <i class="bi bi-info-circle me-1"></i> Analysis may take several minutes. Multiple queries can be analyzed in parallel.
+                    </span>
+                </div>
             </div>
     {% else %}
         <div class="alert alert-info">
@@ -101,7 +117,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         const toggleButtons = document.querySelectorAll('.toggle-queries');
         toggleButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent link from changing URL
                 const targetId = this.getAttribute('data-target');
                 const targetElement = document.getElementById(targetId);
                 targetElement.classList.toggle('d-none');

@@ -4,3 +4,4 @@
 /run.bat
 /.env
 /vendor/
+/state.sqlite
