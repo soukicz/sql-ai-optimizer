@@ -33,16 +33,24 @@ class StateDatabase {
 
     private function initializeDatabase(): void {
         $sql = file_get_contents(__DIR__ . '/schema/state_database.sql');
-        $this->connection->query($sql);
+        $statements = explode(';', $sql);
+
+        foreach ($statements as $statement) {
+            $statement = trim($statement);
+            if (!empty($statement)) {
+                $this->connection->query($statement);
+            }
+        }
     }
 
     public function getConnection(): Connection {
         return $this->connection;
     }
 
-    public function createRun(string $description): int {
+    public function createRun(?string $input, string $output): int {
         $this->connection->query('INSERT INTO run', [
-            'description' => $description,
+            'input' => $input,
+            'output' => $output,
         ]);
 
         return $this->connection->getInsertId();
@@ -58,18 +66,20 @@ class StateDatabase {
         return $this->connection->getInsertId();
     }
 
-    public function saveQuery(
-        string $digest,
+    public function createQuery(
+        int $runId,
         int $groupId,
+        string $digest,
         string $schema,
-        string $querySample,
+        string $queryText,
         string $impactDescription
     ): void {
         $this->connection->query('INSERT INTO query', [
+            'run_id' => $runId,
             'digest' => $digest,
             'group_id' => $groupId,
             'schema' => $schema,
-            'query_sample' => $querySample,
+            'query_text' => $queryText,
             'impact_description' => $impactDescription,
         ]);
     }
@@ -104,6 +114,33 @@ class StateDatabase {
             return;
         }
 
-        $this->connection->query('UPDATE query SET', $data, 'WHERE digest = %s', $digest,' AND group_di = %i', $groupId);
+        $this->connection->query('UPDATE query SET', $data, 'WHERE digest = %s', $digest, ' AND group_di = %i', $groupId);
+    }
+
+    public function getRuns(): array {
+        return $this->connection->query('SELECT * FROM run')->fetchAll();
+    }
+
+    public function getGroupsByRunId(int $runId): array {
+        return $this->connection->query('SELECT * FROM [group] WHERE run_id = %i', $runId)->fetchAll();
+    }
+
+    public function getQueriesByRunId(int $runId): array {
+        return $this->connection->query('SELECT * FROM query WHERE run_id = %i', $runId)->fetchAll();
+    }
+
+    public function getRun(int $id): ?array {
+        $result = $this->connection->query('SELECT * FROM run WHERE id = %i', $id)->fetch();
+        if ($result) {
+            return (array)$result;
+        }
+
+        return null;
+    }
+
+    public function getQuery(int $id): ?array {
+        $result = $this->connection->query('SELECT * FROM query WHERE id = %i', $id)->fetch();
+
+        return $result ?: null;
     }
 }

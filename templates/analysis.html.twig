@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Query Analysis - MySQL Optimizer{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <a href="{{ path('index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Query List
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h1 class="h3 mb-0">Query Analysis</h1>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Schema</h5>
+                    <p class="text-muted">{{ query.schema_name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Group</h5>
+                    <p class="text-muted">{{ query.group_name }}</p>
+                </div>
+            </div>
+
+            <h5>Description</h5>
+            <p class="mb-4">{{ query.description }}</p>
+
+            <h5>SQL Query</h5>
+            <pre class="sql mb-4">{{ query.sql }}</pre>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h2 class="h4 mb-0">Optimization Recommendations</h2>
+        </div>
+        <div class="card-body">
+            <div class="markdown-content">
+                {{ recommendations|raw }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .markdown-content h1 { font-size: 1.8rem; margin-top: 1.5rem; margin-bottom: 1rem; }
+    .markdown-content h2 { font-size: 1.5rem; margin-top: 1.2rem; margin-bottom: 0.8rem; }
+    .markdown-content h3 { font-size: 1.2rem; margin-top: 1rem; margin-bottom: 0.6rem; }
+    .markdown-content h4 { font-size: 1.1rem; margin-top: 0.8rem; margin-bottom: 0.5rem; }
+    .markdown-content ul, .markdown-content ol { margin-bottom: 1rem; padding-left: 2rem; }
+    .markdown-content p { margin-bottom: 1rem; }
+    .markdown-content pre { background-color: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    .markdown-content code { background-color: #f8f9fa; padding: 0.2rem 0.4rem; border-radius: 3px; }
+    .markdown-content table { width: 100%; margin-bottom: 1rem; border-collapse: collapse; }
+    .markdown-content table th, .markdown-content table td { padding: 0.5rem; border: 1px solid #dee2e6; }
+    .markdown-content table th { background-color: #f1f3f5; }
+    .markdown-content blockquote { padding: 0.5rem 1rem; margin-bottom: 1rem; border-left: 4px solid #ced4da; color: #6c757d; }
+</style>
+{% endblock %} 

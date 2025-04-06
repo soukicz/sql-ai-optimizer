@@ -1,0 +1,119 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}MySQL Optimizer - Run #{{ run.id }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">Run #{{ run.id }}</h1>
+        <a href="/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to All Runs
+        </a>
+    </div>
+    
+    <form id="analyze-form" method="POST" action="/run/{{ run.id }}/analyze">
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Run Information</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Created:</strong> {{ run.created_at|date('Y-m-d H:i:s') }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Total Queries:</strong> <span class="badge bg-primary">{{ queries|length }}</span></p>
+                </div>
+            </div>
+            <div class="text-end mt-2">
+                <button type="submit" form="analyze-form" class="btn btn-primary">
+                    <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if groups|length > 0 %}
+        <h3 class="mb-3">Query Groups</h3>
+        
+        
+            <input type="hidden" name="run_id" value="{{ run.id }}">
+            
+            {% for group in groups %}
+                <div class="query-group shadow-sm mb-4">
+                    <div class="query-group-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="h5 mb-0">{{ group.name }}</h4>
+                            <a href="#" class="btn btn-sm btn-outline-secondary toggle-queries" data-target="queries-{{ loop.index }}">
+                                <span class="badge bg-primary rounded-pill">{{ queries|filter(q => q.group_id == group.id)|length }}</span>
+                                <i class="bi bi-chevron-down ms-1"></i>
+                            </a>
+                        </div>
+                        <p class="text-muted mb-0 mt-2">{{ group.description }}</p>
+                    </div>
+                    
+                    <div class="p-3 d-none" id="queries-{{ loop.index }}">
+                        {% set group_queries = queries|filter(q => q.group_id == group.id) %}
+                        {% for query in group_queries %}
+                            <div class="query-box mb-3 pb-3 border-bottom">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="query_ids[]" value="{{ query.id }}" id="query-{{ query.id }}" {% if query.analyzed %}disabled{% endif %}>
+                                    <label class="form-check-label" for="query-{{ query.id }}">
+                                        {{ query.impact_description }}
+                                    </label>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <a class="btn btn-sm btn-link text-decoration-none" data-bs-toggle="collapse" href="#queryCode-{{ query.id }}">
+                                        <i class="bi bi-code-slash me-1"></i> View SQL
+                                    </a>
+                                    
+                                    {% if query.analyzed %}
+                                        <a href="/run/{{ run.id }}/query/{{ query.id }}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-circle me-1"></i> View Analysis
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="collapse mt-2" id="queryCode-{{ query.id }}">
+                                    <pre class="sql p-3 bg-light text-dark rounded">{{ query.query_text_formatted|raw }}</pre>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="text-end mt-4 mb-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
+                </button>
+            </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> No query groups found for this run.
+        </div>
+    {% endif %}
+    </form>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-queries');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetElement = document.getElementById(targetId);
+                targetElement.classList.toggle('d-none');
+                
+                const icon = this.querySelector('.bi');
+                if (icon.classList.contains('bi-chevron-down')) {
+                    icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+                } else {
+                    icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

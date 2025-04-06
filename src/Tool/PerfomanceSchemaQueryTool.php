@@ -13,7 +13,8 @@ use Symfony\Contracts\Cache\ItemInterface;
 class PerfomanceSchemaQueryTool extends ToolDefinition {
     public function __construct(
         private AnalyzedDatabase $database,
-        private FilesystemAdapter $cache
+        private FilesystemAdapter $cache,
+        private int $cacheTtl = 24 * 60 * 60
     ) {
     }
 
@@ -63,7 +64,7 @@ class PerfomanceSchemaQueryTool extends ToolDefinition {
                 } else {
                     $result = "No results found.";
                 }
-                $item->expiresAfter(30 * 60);
+                $item->expiresAfter($this->cacheTtl);
             } catch (\Exception $e) {
                 $result = "Error: " . $e->getMessage();
             }

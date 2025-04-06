@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS run (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    description TEXT
+    input TEXT,
+    output TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `group` (
@@ -14,15 +15,16 @@ CREATE TABLE IF NOT EXISTS `group` (
 );
 
 CREATE TABLE IF NOT EXISTS query (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     digest TEXT NOT NULL,
+    run_id INTEGER NOT NULL,
     group_id INTEGER NOT NULL,
-    schema TEXT,
+    schema TEXT NOT NULL,
     query_text TEXT,
     impact_description TEXT,
     fix_input TEXT,
     fix_output TEXT,
     query_sample TEXT,
     explain_result TEXT,
-    PRIMARY KEY (digest, group_id),
     FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE CASCADE
 ); 

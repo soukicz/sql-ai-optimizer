@@ -10,6 +10,9 @@ use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\Llm\Tool\ToolDefinition;
+use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
+use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
+use Soukicz\SqlAiOptimizer\Result\CandidateResult;
 use Soukicz\SqlAiOptimizer\Tool\PerfomanceSchemaQueryTool;
 
 readonly class AI {
@@ -20,8 +23,8 @@ readonly class AI {
     ) {
     }
 
-    public function getCandidateQueries(): array {
-        $results = null;
+    public function getCandidateQueries(): CandidateResult {
+        $groups = [];
 
         $tools = [
             $this->perfomanceSchemaQueryTool,
@@ -77,8 +80,8 @@ readonly class AI {
                     ],
                 ],
             ],
-            handler: function (array $input) use (&$results): string {
-                $results = $input['queries'];
+            handler: function (array $input) use (&$groups): string {
+                $groups[] = $input;
 
                 return 'Selection submitted';
             }
@@ -108,6 +111,23 @@ readonly class AI {
             request: $request,
         );
 
-        return $results;
+        $resultGroups = [];
+        foreach ($groups as $group) {
+            $resultGroups[] = new CandidateQueryGroup(
+                name: $group['group']['name'],
+                description: $group['group']['description'],
+                queries: array_map(fn (array $query) => new CandidateQuery(
+                    schema: $query['schema'],
+                    digest: $query['digest'],
+                    queryText: $query['query_sample'],
+                    impactDescription: $query['reason'],
+                ), $group['queries']),
+            );
+        }
+
+        return new CandidateResult(
+            description: $response->getLastText(),
+            groups: $resultGroups,
+        );
     }
 }

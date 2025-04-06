@@ -74,7 +74,7 @@ class Kernel extends BaseKernel {
 
         $container->services()
             ->set(StateDatabase::class)
-            ->arg('$databasePath', '%env(default:state.sqlite:SQLITE_DATABASE_PATH)%')
+            ->arg('$databasePath', __DIR__ . '/state.sqlite')
             ->autowire()
             ->autoconfigure();
 
