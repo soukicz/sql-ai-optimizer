@@ -115,6 +115,7 @@
 {% block javascripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Toggle query groups
         const toggleButtons = document.querySelectorAll('.toggle-queries');
         toggleButtons.forEach(button => {
             button.addEventListener('click', function(event) {
@@ -129,6 +130,64 @@
                 } else {
                     icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
                 }
+            });
+        });
+
+        // Form submission handling
+        const analyzeForm = document.getElementById('analyze-form');
+        analyzeForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Check if any checkbox is checked
+            const checkedBoxes = analyzeForm.querySelectorAll('input[name="query_ids[]"]:checked');
+            
+            if (checkedBoxes.length === 0) {
+                // Display error if no checkbox is checked
+                if (!document.getElementById('error-message')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.id = 'error-message';
+                    errorDiv.className = 'alert alert-danger mt-3';
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> Please select at least one query to analyze.';
+                    analyzeForm.querySelector('.card').after(errorDiv);
+                    
+                    // Auto-remove the error after 5 seconds
+                    setTimeout(() => {
+                        const msg = document.getElementById('error-message');
+                        if (msg) msg.remove();
+                    }, 5000);
+                }
+                return;
+            }
+            
+            // Create and show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'loading-overlay';
+            loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);display:flex;justify-content:center;align-items:center;z-index:9999;';
+            loadingOverlay.innerHTML = '<div class="text-center"><div class="spinner-border text-primary mb-3" role="status"></div><p>Analyzing queries... This may take a few minutes.</p></div>';
+            document.body.appendChild(loadingOverlay);
+            
+            // Submit form with fetch API
+            fetch(analyzeForm.action, {
+                method: 'POST',
+                body: new FormData(analyzeForm)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Reload page after successful submission
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Remove loading overlay
+                document.getElementById('loading-overlay').remove();
+                
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i> An error occurred while analyzing queries. Please try again.';
+                analyzeForm.querySelector('.card').after(errorDiv);
             });
         });
     });
