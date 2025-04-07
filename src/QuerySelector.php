@@ -33,21 +33,16 @@ readonly class QuerySelector {
 
         $submitInputSchema = [
             'type' => 'object',
-            'required' => ['queries', 'group'],
+            'required' => ['queries', 'group_name', 'group_description'],
             'properties' => [
-                'group' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'name' => [
-                            'type' => 'string',
-                            'description' => 'Group name',
-                        ],
-                    ],
-                    'desription' => [
-                            'type' => 'string',
-                            'description' => 'Description of performance impact type of the group',
-                        ],
-                    ],
+                'group_name' => [
+                    'type' => 'string',
+                    'description' => 'Group name',
+                ],
+                'group_description' => [
+                    'type' => 'string',
+                    'description' => 'Description of performance impact type of the group',
+                ],
                 'queries' => [
                     'type' => 'array',
                     'description' => 'Array of query digests to optimize (min 1, max 20)',
@@ -85,7 +80,7 @@ readonly class QuerySelector {
             inputSchema: $submitInputSchema,
             handler: function (array $input) use (&$groups, $submitInputSchema): string {
                 try {
-                    Schema::import($submitInputSchema)->in($input);
+                    Schema::import(json_decode(json_encode($submitInputSchema)))->in(json_decode(json_encode($input)));
                 } catch (\Exception $e) {
                     return 'ERROR: Input is not matching expected schema: ' . $e->getMessage();
                 }
@@ -127,8 +122,8 @@ readonly class QuerySelector {
         $resultGroups = [];
         foreach ($groups as $group) {
             $resultGroups[] = new CandidateQueryGroup(
-                name: $group['group']['name'],
-                description: $group['group']['description'],
+                name: $group['group_name'],
+                description: $group['group_description'],
                 queries: array_map(fn (array $query) => new CandidateQuery(
                     schema: $query['schema'],
                     digest: $query['digest'],
