@@ -22,6 +22,7 @@ class AnalyzedDatabase {
             'database' => ltrim($parsedUrl['path'], '/'),
             'port' => $parsedUrl['port'] ?? null,
             'charset' => 'utf8mb4',
+            'lazy' => true,
         ];
 
         $this->connection = new Connection($dbConfig);

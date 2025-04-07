@@ -42,11 +42,19 @@ class RunController {
             return $query;
         }, $queries);
 
+        $missingSqlCount = 0;
+        foreach ($queries as $query) {
+            if (empty($query['query_sample'])) {
+                $missingSqlCount++;
+            }
+        }
+
         return new Response(
             $this->twig->render('run_detail.html.twig', [
                 'run' => $run,
                 'groups' => $groups,
                 'queries' => $queries,
+                'missingSqlCount' => $missingSqlCount,
             ])
         );
     }
