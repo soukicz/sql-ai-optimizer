@@ -32,11 +32,30 @@ class AnalyzedDatabase {
     }
 
     public function getQueryText(string $digest, string $schema): ?string {
-        $sql = $this->connection->query('SELECT sql_text FROM performance_schema.events_statements_history WHERE digest=%s', $digest, ' AND current_schema = %s', $schema)->fetchSingle();
-        if (!$sql) {
-            $sql = $this->connection->query('SELECT sql_text FROM performance_schema.events_statements_history_long WHERE digest=%s', $digest, ' AND current_schema = %s', $schema)->fetchSingle();
+        foreach (['events_statements_history', 'events_statements_history_long'] as $table) {
+            $sql = $this->connection->query('SELECT sql_text FROM performance_schema.%n WHERE digest=%s', $table, $digest, ' AND current_schema = %s', $schema)->fetchSingle();
+            if ($sql) {
+                return $sql;
+            }
         }
 
-        return $sql;
+        return null;
+    }
+
+    public function getQueryTexts(array $digests): array {
+        $sqls = [];
+
+        foreach (['events_statements_history', 'events_statements_history_long'] as $table) {
+            $list = $this->connection->query('SELECT sql_text,digest,current_schema FROM performance_schema.%n', $table, ' WHERE digest IN (%s)', $digests)->fetchAll();
+            foreach ($list as $item) {
+                $sqls[] = [
+                    'sql_text' => $item['sql_text'],
+                    'digest' => $item['digest'],
+                    'current_schema' => $item['current_schema'],
+                ];
+            }
+        }
+
+        return $sqls;
     }
 }

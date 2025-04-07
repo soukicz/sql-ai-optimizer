@@ -152,4 +152,12 @@ class StateDatabase {
 
         return null;
     }
+
+    public function getQueriesWithoutQuerySample(int $runId): array {
+        return $this->connection->query('SELECT id, digest, schema FROM query WHERE run_id = %i AND query_sample IS NULL', $runId)->fetchAll();
+    }
+
+    public function getQueriesCount(int $runId): int {
+        return $this->connection->query('SELECT COUNT(*) FROM query WHERE run_id = %i', $runId)->fetchSingle();
+    }
 }

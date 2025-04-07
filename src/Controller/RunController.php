@@ -81,4 +81,38 @@ class RunController {
             'url' => '/run/' . $runId,
         ]);
     }
+
+    #[Route('/run/{id}/fetch-queries', name: 'run.fetch-queries')]
+    public function runFetchQueries(int $id): Response {
+        $digests = [];
+        $queries = [];
+        $totalQueriesCount = $this->stateDatabase->getQueriesCount($id);
+        foreach ($this->stateDatabase->getQueriesWithoutQuerySample($id) as $query) {
+            if (!isset($digests[$query['digest']])) {
+                $digests[$query['digest']] = [];
+            }
+
+            $digests[$query['digest']][] = $query['id'];
+            $queries[$query['id']] = $query['schema'];
+        }
+
+        if (!empty($digests)) {
+            foreach ($this->analyzedDatabase->getQueryTexts($digests) as $sql) {
+                if (isset($digests[$sql['digest']])) {
+                    foreach ($digests[$sql['digest']] as $i => $id) {
+                        if ($queries[$id] === $sql['current_schema']) {
+                            $this->stateDatabase->updateQuerySample($id, $sql['sql_text']);
+                            unset($queries[$id]);
+                            unset($digests[$sql['digest']][$i]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return new JsonResponse([
+            'totalQueriesCount' => $totalQueriesCount,
+            'missingQueriesCount' => count($queries),
+        ]);
+    }
 }
