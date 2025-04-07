@@ -49,7 +49,7 @@ class AnalysisController extends BaseController {
         Each::ofLimit($promises, 5)->wait();
 
         return new JsonResponse([
-            'url' => $this->router->generate('run.detail', ['id' => $queryIds[0]]),
+            'url' => $this->router->generate('query.detail', ['id' => $queryIds[0]]),
         ]);
     }
 
@@ -82,6 +82,7 @@ class AnalysisController extends BaseController {
             'group' => $group,
             'sql' => $sql,
             'recommendations' => $html,
+            'backToRunUrl' => $this->router->generate('run.detail', ['id' => $query['run_id']]),
         ]));
     }
 }

@@ -13,6 +13,7 @@ use Soukicz\Llm\LLMResponse;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
+use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 use Soukicz\SqlAiOptimizer\Tool\QueryTool;
 
 readonly class QueryAnalyzer {
@@ -21,7 +22,8 @@ readonly class QueryAnalyzer {
         private AnthropicClient $anthropicClient,
         private AnalyzedDatabase $analyzedDatabase,
         private StateDatabase $stateDatabase,
-        private QueryTool $queryTool
+        private QueryTool $queryTool,
+        private DatabaseQueryExecutor $databaseQueryExecutor
     ) {
     }
 
@@ -147,6 +149,9 @@ readonly class QueryAnalyzer {
                     $prompt .= "ALTER TABLE `$table` ADD {$uniqueKeyword}INDEX `{$index['name']}` ($columnList) USING {$index['index_type']};\n";
                 }
                 $prompt .= "```\n";
+
+                $indexStats = $this->databaseQueryExecutor->executeQuery($candidateQuery->getSchema(), "SHOW INDEX FROM $table");
+                $prompt .= "\n\n#### SHOW INDEX FROM $table\n\n$indexStats\n\n";
             }
         }
 
