@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class RunController {
+class RunController extends BaseController {
     public function __construct(
         private AnalyzedDatabase $analyzedDatabase,
         private QuerySelector $querySelector,
@@ -51,6 +51,7 @@ class RunController {
 
         return new Response(
             $this->twig->render('run_detail.html.twig', [
+                'summary' => $this->renderMarkdownWithHighlighting($run['output']),
                 'run' => $run,
                 'groups' => $groups,
                 'queries' => $queries,

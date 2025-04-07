@@ -89,7 +89,7 @@ class Kernel extends BaseKernel {
             ->set(\Twig\Environment::class)
             ->arg('$loader', new Reference('twig.loader'))
             ->arg('$options', [
-                'cache' => __DIR__ . '/cache/twig',
+                'cache' => __DIR__ . '/var/cache/twig',
                 'debug' => '%env(bool:APP_DEBUG)%',
             ])
             ->autowire()

@@ -4,12 +4,6 @@ namespace Soukicz\SqlAiOptimizer\Controller;
 
 use Dibi\Helpers;
 use GuzzleHttp\Promise\Each;
-use League\CommonMark\Environment\Environment as CommonMarkEnvironment;
-use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
-use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
-use League\CommonMark\Extension\Table\TableExtension;
-use League\CommonMark\Extension\TaskList\TaskListExtension;
-use League\CommonMark\MarkdownConverter;
 use Soukicz\SqlAiOptimizer\QueryAnalyzer;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\StateDatabase;
@@ -19,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Twig\Environment;
 
-class AnalysisController {
+class AnalysisController extends BaseController {
     public function __construct(
         private QueryAnalyzer $queryAnalyzer,
         private Environment $twig,
@@ -80,29 +74,5 @@ class AnalysisController {
             'sql' => $sql,
             'recommendations' => $html,
         ]));
-    }
-
-    /**
-     * Renders markdown content to HTML with syntax highlighting for code blocks
-     */
-    private function renderMarkdownWithHighlighting(string $markdown): string {
-        $environment = new CommonMarkEnvironment([
-            'html_input' => 'allow',
-            'allow_unsafe_links' => false,
-        ]);
-
-        // Add the core CommonMark rules
-        $environment->addExtension(new CommonMarkCoreExtension());
-
-        // Add the GFM extensions
-        $environment->addExtension(new TableExtension());
-        $environment->addExtension(new StrikethroughExtension());
-        $environment->addExtension(new TaskListExtension());
-
-        // Create the converter
-        $converter = new MarkdownConverter($environment);
-
-        // Convert markdown to HTML
-        return $converter->convert($markdown)->getContent();
     }
 }
