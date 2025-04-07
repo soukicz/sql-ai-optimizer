@@ -49,6 +49,11 @@ class RunController extends BaseController {
             }
         }
 
+        $specialInstructions = $run['input'];
+        if (!empty($specialInstructions)) {
+            $specialInstructions = nl2br(htmlspecialchars($specialInstructions));
+        }
+
         return new Response(
             $this->twig->render('run_detail.html.twig', [
                 'summary' => $this->renderMarkdownWithHighlighting($run['output']),
@@ -56,13 +61,14 @@ class RunController extends BaseController {
                 'groups' => $groups,
                 'queries' => $queries,
                 'missingSqlCount' => $missingSqlCount,
+                'specialInstructions' => $specialInstructions,
             ])
         );
     }
 
     #[Route('/new-run', name: 'run.new', methods: ['POST'])]
     public function newRun(Request $request): Response {
-        $results = $this->querySelector->getCandidateQueries();
+        $results = $this->querySelector->getCandidateQueries($request->request->get('input'));
 
         $this->stateDatabase->getConnection()->begin();
         $runId = $this->stateDatabase->createRun($request->request->get('input'), $results->getDescription());
