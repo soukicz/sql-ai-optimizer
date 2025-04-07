@@ -40,7 +40,7 @@
             </div>
             {% if missingSqlCount > 0 %}
                 <div class="alert alert-warning mt-4">
-                    <i class="bi bi-exclamation-triangle me-2"></i> Total of <strong>{{ missingSqlCount }}</strong> queries didn't get SQL text on first try and anylysis cannot use real query plan data.
+                    <i class="bi bi-exclamation-triangle me-2"></i> A total of <strong>{{ missingSqlCount }}</strong> queries didn't get SQL text on the first try and analysis cannot use real query plan data.
                                             
                     <a href="/run/{{ run.id }}/fetch-queries" class="btn btn-sm btn-warning retry-query-fetch">
                         <i class="bi bi-arrow-repeat me-1"></i> Retry fetching SQL text
@@ -170,7 +170,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p>Waiting for analyzed queries to appear in current process list on server. Keep this running for a few minutes - you can also try to replicate problematic use-case on server to catch query sooner.</p>
+                                        <p>Waiting for analyzed queries to appear in current process list on server. Keep this running for a few minutes - you can also try to replicate the problematic use-case on the server to catch the query sooner.</p>
                                         <p><small id="retry-status"></small></p>
                                         <p>Collected <strong id="collected-queries-count">{{ queries|length - missingSqlCount }}</strong> of <strong id="total-queries-count">{{ queries|length }}</strong> queries.</p>
                                         <div class="progress">
