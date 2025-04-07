@@ -43,6 +43,27 @@
                     <em>If left blank, the analysis will check all databases and suggest changes on a best-effort basis.</em>
                     <textarea class="form-control" id="input" name="input" rows="8" placeholder="e.g. Focus on queries with high CPU usage and consider only queries with last run in the last week">{{ prompt|default('') }}</textarea>
                 </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Queries are sent to LLM for analysis - configure what type of data is processed:</label>
+                    <div class="card border-light">
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="queries[]" value="anonymized" id="anonymizedQuery" checked disabled>
+                                <label class="form-check-label" for="anonymizedQuery">Anonymized queries</label>
+                                <small class="text-muted d-block ms-4">Queries with removed parameters - general analysis only without query plan.</small>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="use_query_sample" value="1" id="realQuery" checked>
+                                <label class="form-check-label" for="realQuery">Real query</label>
+                                <p class="text-muted small ms-4 mb-0">Capture example of real queries with parameters - allows for query plan analysis.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="alert alert-warning mb-3">
                     <i class="bi bi-clock me-2"></i> Please note: Generating optimization suggestions may take several minutes.
                     <br>

@@ -62,6 +62,7 @@ class RunController extends BaseController {
                 'queries' => $queries,
                 'missingSqlCount' => $missingSqlCount,
                 'specialInstructions' => $specialInstructions,
+                'useQuerySample' => (bool)$run['use_query_sample'],
             ])
         );
     }
@@ -70,8 +71,15 @@ class RunController extends BaseController {
     public function newRun(Request $request): Response {
         $results = $this->querySelector->getCandidateQueries($request->request->get('input'));
 
+        $useQuerySample = $request->request->getBoolean('use_query_sample', false);
+
         $this->stateDatabase->getConnection()->begin();
-        $runId = $this->stateDatabase->createRun($request->request->get('input'), $results->getDescription());
+        $runId = $this->stateDatabase->createRun(
+            $request->request->get('input'),
+            $results->getDescription(),
+            $useQuerySample,
+            $request->request->getBoolean('use_database_access', false)
+        );
 
         foreach ($results->getGroups() as $group) {
             $groupId = $this->stateDatabase->createGroup($runId, $group->getName(), $group->getDescription());
@@ -81,7 +89,11 @@ class RunController extends BaseController {
                     continue;
                 }
 
-                $rawSql = $this->analyzedDatabase->getQueryText($query->getDigest(), $query->getSchema());
+                if ($useQuerySample) {
+                    $rawSql = $this->analyzedDatabase->getQueryText($query->getDigest(), $query->getSchema());
+                } else {
+                    $rawSql = null;
+                }
                 $this->stateDatabase->createQuery(
                     runId: $runId,
                     groupId: $groupId,
@@ -103,6 +115,19 @@ class RunController extends BaseController {
 
     #[Route('/run/{id}/fetch-queries', name: 'run.fetch-queries')]
     public function runFetchQueries(int $id): Response {
+        $run = $this->stateDatabase->getRun($id);
+        if (!$run) {
+            return new JsonResponse([
+                'error' => 'Run not found',
+            ], 404);
+        }
+
+        if (!$run['use_query_sample']) {
+            return new JsonResponse([
+                'error' => 'Query sample is not used for this run',
+            ], 400);
+        }
+
         $digests = [];
         $queries = [];
         $totalQueriesCount = $this->stateDatabase->getQueriesCount($id);

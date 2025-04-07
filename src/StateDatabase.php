@@ -47,10 +47,12 @@ class StateDatabase {
         return $this->connection;
     }
 
-    public function createRun(?string $input, string $output): int {
+    public function createRun(?string $input, string $output, bool $useQuerySample, bool $useDatabaseAccess): int {
         $this->connection->query('INSERT INTO run', [
             'input' => $input,
             'output' => $output,
+            'use_query_sample' => $useQuerySample,
+            'use_database_access' => $useDatabaseAccess,
         ]);
 
         return $this->connection->getInsertId();

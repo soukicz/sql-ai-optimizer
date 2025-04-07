@@ -1,5 +1,7 @@
 CREATE TABLE IF NOT EXISTS run (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    use_query_sample INTEGER NOT NULL DEFAULT 0,
+    use_database_access INTEGER NOT NULL DEFAULT 0,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     input TEXT,
     output TEXT NOT NULL
