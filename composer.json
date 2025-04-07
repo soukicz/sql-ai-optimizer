@@ -21,7 +21,8 @@
         "symfony/cache": "^7.2",
         "twig/twig": "^3.20",
         "league/commonmark": "^2.6",
-        "spatie/commonmark-highlighter": "^3.0"
+        "spatie/commonmark-highlighter": "^3.0",
+        "swaggest/json-schema": "^0.12.43"
     },
     "config": {
         "allow-plugins": {

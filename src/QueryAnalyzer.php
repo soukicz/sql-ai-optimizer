@@ -2,6 +2,7 @@
 
 namespace Soukicz\SqlAiOptimizer;
 
+use Dibi\DriverException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
@@ -36,9 +37,14 @@ readonly class QueryAnalyzer {
         $explainJson = null;
         if ($rawSql) {
             $this->analyzedDatabase->getConnection()->query('USE %n', $candidateQuery->getSchema());
-            $explainJson = $this->analyzedDatabase->getConnection()
-            ->query('EXPLAIN format=json %sql', $rawSql)
-            ->fetchSingle();
+
+            try {
+                $explainJson = $this->analyzedDatabase->getConnection()
+                ->query('EXPLAIN format=json %sql', $rawSql)
+                ->fetchSingle();
+            } catch (DriverException) {
+                $explainJson = null;
+            }
         }
 
         $promptSql = $rawSql ?? $candidateQuery->getQueryText();
@@ -49,6 +55,9 @@ readonly class QueryAnalyzer {
         Analyze all information and provide me with instructions to change the query, update schema or how to split to more manageable queries in PHP.
         
         ### Query description from performance schema
+        
+        This description was created based on data from all query runs as reported by performance schema.
+
         ```
         {$candidateQuery->getImpactDescription()}
         ```
@@ -57,10 +66,12 @@ readonly class QueryAnalyzer {
         ```
         $promptSql
         ```
+
         EOT;
 
         if (isset($explainJson)) {
             $prompt .= <<<EOT
+        
         ### Explain result
         ```
         $explainJson

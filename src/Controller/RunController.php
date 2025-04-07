@@ -77,6 +77,10 @@ class RunController extends BaseController {
             $groupId = $this->stateDatabase->createGroup($runId, $group->getName(), $group->getDescription());
 
             foreach ($group->getQueries() as $query) {
+                if (empty($query->getSchema()) || $query->getSchema() === 'NULL') {
+                    continue;
+                }
+
                 $rawSql = $this->analyzedDatabase->getQueryText($query->getDigest(), $query->getSchema());
                 $this->stateDatabase->createQuery(
                     runId: $runId,
@@ -112,7 +116,7 @@ class RunController extends BaseController {
         }
 
         if (!empty($digests)) {
-            foreach ($this->analyzedDatabase->getQueryTexts($digests) as $sql) {
+            foreach ($this->analyzedDatabase->getQueryTexts(array_keys($digests)) as $sql) {
                 if (isset($digests[$sql['digest']])) {
                     foreach ($digests[$sql['digest']] as $i => $id) {
                         if ($queries[$id] === $sql['current_schema']) {

@@ -14,6 +14,7 @@ use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
 use Soukicz\SqlAiOptimizer\Result\CandidateResult;
 use Soukicz\SqlAiOptimizer\Tool\PerfomanceSchemaQueryTool;
+use Swaggest\JsonSchema\Schema;
 
 readonly class QuerySelector {
     public function __construct(
@@ -30,57 +31,65 @@ readonly class QuerySelector {
             $this->perfomanceSchemaQueryTool,
         ];
 
-        $tools[] = new ToolDefinition(
-            name: 'submit_selection',
-            description: 'Submit your selection of 20 most expensive queries',
-            inputSchema: [
-                'type' => 'object',
-                'required' => ['queries'],
-                'properties' => [
-                    'group' => [
+        $submitInputSchema = [
+            'type' => 'object',
+            'required' => ['queries', 'group'],
+            'properties' => [
+                'group' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'name' => [
+                            'type' => 'string',
+                            'description' => 'Group name',
+                        ],
+                    ],
+                    'desription' => [
+                            'type' => 'string',
+                            'description' => 'Description of performance impact type of the group',
+                        ],
+                    ],
+                'queries' => [
+                    'type' => 'array',
+                    'description' => 'Array of query digests to optimize (min 1, max 20)',
+                    'minItems' => 1,
+                    'maxItems' => 20,
+                    'items' => [
                         'type' => 'object',
+                        'required' => ['digest', 'query_sample', 'schema', 'reason'],
                         'properties' => [
-                            'name' => [
+                            'digest' => [
                                 'type' => 'string',
-                                'description' => 'Group name',
+                                'description' => 'The query digest hash from performance_schema',
                             ],
-                        ],
-                        'desription' => [
+                            'query_sample' => [
                                 'type' => 'string',
-                                'description' => 'Description of performance impact type of the group',
+                                'description' => 'The query text from performance_schema',
                             ],
-                        ],
-                    'queries' => [
-                        'type' => 'array',
-                        'description' => 'Array of query digests to optimize (min 1, max 20)',
-                        'minItems' => 1,
-                        'maxItems' => 20,
-                        'items' => [
-                            'type' => 'object',
-                            'required' => ['digest', 'query_sample', 'schema', 'reason'],
-                            'properties' => [
-                                'digest' => [
-                                    'type' => 'string',
-                                    'description' => 'The query digest hash from performance_schema',
-                                ],
-                                'query_sample' => [
-                                    'type' => 'string',
-                                    'description' => 'The query text from performance_schema',
-                                ],
-                                'schema' => [
-                                    'type' => 'string',
-                                    'description' => 'The database schema the query operates on',
-                                ],
-                                'reason' => [
-                                    'type' => 'string',
-                                    'description' => 'Explanation of why this query is worth optimizing',
-                                ],
+                            'schema' => [
+                                'type' => 'string',
+                                'description' => 'The database schema the query operates on',
+                            ],
+                            'reason' => [
+                                'type' => 'string',
+                                'description' => 'Explanation of why this query is worth optimizing - formulate it in a way that it will be obvious if mentioned numbers are about a single query or total for all queries in the group',
                             ],
                         ],
                     ],
                 ],
             ],
-            handler: function (array $input) use (&$groups): string {
+        ];
+
+        $tools[] = new ToolDefinition(
+            name: 'submit_selection',
+            description: 'Submit your selection of 20 most expensive queries',
+            inputSchema: $submitInputSchema,
+            handler: function (array $input) use (&$groups, $submitInputSchema): string {
+                try {
+                    Schema::import($submitInputSchema)->in($input);
+                } catch (\Exception $e) {
+                    return 'ERROR: Input is not matching expected schema: ' . $e->getMessage();
+                }
+
                 $groups[] = $input;
 
                 return 'Selection submitted';

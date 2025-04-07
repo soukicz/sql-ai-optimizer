@@ -11,19 +11,21 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 
 class AnalysisController extends BaseController {
     public function __construct(
         private QueryAnalyzer $queryAnalyzer,
         private Environment $twig,
-        private StateDatabase $stateDatabase
+        private StateDatabase $stateDatabase,
+        private UrlGeneratorInterface $router
     ) {
     }
 
-    #[Route('/run/1/analyze', name: 'run.analyze', methods: ['POST'])]
-    public function analyzePrompt(Request $request): Response {
-        $queryIds = $request->request->all('query_ids');
+    #[Route('/run/{id}/analyze', name: 'run.analyze', methods: ['POST'])]
+    public function analyzePrompt(Request $request, int $id): Response {
+        $queryIds = array_values($request->request->all('query_ids'));
 
         $promises = [];
         foreach ($queryIds as $queryId) {
@@ -41,7 +43,9 @@ class AnalysisController extends BaseController {
         // Process 5 promises concurrently
         Each::ofLimit($promises, 5)->wait();
 
-        return new JsonResponse();
+        return new JsonResponse([
+            'url' => $this->router->generate('run.detail', ['id' => $queryIds[0]]),
+        ]);
     }
 
     #[Route('/query/{queryId}', name: 'query.detail')]

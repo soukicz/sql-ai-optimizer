@@ -95,7 +95,7 @@
                                         <i class="bi bi-database me-1"></i> Schema: <strong>{{ query.schema }}</strong>
                                     </div> 
                                     {% if query.fix_output is not empty %}
-                                        <a href="/query/{{ query.id }}/fix" class="btn btn-sm btn-success">
+                                        <a href="/query/{{ query.id }}" class="btn btn-sm btn-success">
                                             <i class="bi bi-search me-1"></i> View Analysis
                                         </a>
                                     {% endif %}
@@ -306,8 +306,10 @@
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                // Reload page after successful submission
-                window.location.reload();
+                return response.json();
+            })
+            .then(data => {
+                window.location.href = data.url;
             })
             .catch(error => {
                 console.error('Error:', error);
