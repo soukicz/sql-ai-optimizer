@@ -78,6 +78,17 @@ class Kernel extends BaseKernel {
             ->autowire()
             ->autoconfigure();
 
+        $container->services()
+            ->set(\Soukicz\SqlAiOptimizer\Service\QueryResultFormatter::class)
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
+            ->set(\Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor::class)
+            ->arg('$cacheTtl', 24 * 60 * 60)
+            ->autowire()
+            ->autoconfigure();
+
         // Register Twig
         $container->services()
             ->set('twig.loader', \Twig\Loader\FilesystemLoader::class)

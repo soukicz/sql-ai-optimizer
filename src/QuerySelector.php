@@ -13,14 +13,14 @@ use Soukicz\Llm\Tool\ToolDefinition;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
 use Soukicz\SqlAiOptimizer\Result\CandidateResult;
-use Soukicz\SqlAiOptimizer\Tool\PerfomanceSchemaQueryTool;
+use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
 use Swaggest\JsonSchema\Schema;
 
 readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
         private AnthropicClient $anthropicClient,
-        private PerfomanceSchemaQueryTool $perfomanceSchemaQueryTool
+        private PerformanceSchemaQueryTool $performanceSchemaQueryTool
     ) {
     }
 
@@ -28,7 +28,7 @@ readonly class QuerySelector {
         $groups = [];
 
         $tools = [
-            $this->perfomanceSchemaQueryTool,
+            $this->performanceSchemaQueryTool,
         ];
 
         $submitInputSchema = [

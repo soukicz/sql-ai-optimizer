@@ -59,7 +59,12 @@
                                 <label class="form-check-label" for="realQuery">Real query</label>
                                 <p class="text-muted small ms-4 mb-0">Capture example of real queries with parameters - allows for query plan analysis.</p>
                             </div>
-
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="use_database_access" value="1" id="anyQuery">
+                                <label class="form-check-label" for="anyQuery">Full database access</label>
+                                <p class="text-muted small ms-4 mb-0">Allow running any query on the database - allows analysis of table size, cardinality, etc. Analysis should retrieve only metadata and not table contentes but it cannot be garantied.</p>
+                            </div>
                         </div>
                     </div>
                 </div>

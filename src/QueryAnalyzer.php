@@ -13,17 +13,19 @@ use Soukicz\Llm\LLMResponse;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
+use Soukicz\SqlAiOptimizer\Tool\QueryTool;
 
 readonly class QueryAnalyzer {
     public function __construct(
         private LLMChainClient $llmChainClient,
         private AnthropicClient $anthropicClient,
         private AnalyzedDatabase $analyzedDatabase,
-        private StateDatabase $stateDatabase
+        private StateDatabase $stateDatabase,
+        private QueryTool $queryTool
     ) {
     }
 
-    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery): PromiseInterface {
+    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery, bool $useDatabaseAccess): PromiseInterface {
         if (!$rawSql) {
             $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
             if ($rawSql) {
@@ -54,12 +56,25 @@ readonly class QueryAnalyzer {
         
         Analyze all information and provide me with instructions to change the query, update schema or how to split to more manageable queries in PHP.
         
+        Database: {$candidateQuery->getSchema()}
+
+        Query digest: {$candidateQuery->getDigest()}
+
         ### Query
         ```
         $promptSql
         ```
 
         EOT;
+
+        if ($useDatabaseAccess) {
+            $prompt .= <<<EOT
+
+        ### Additional information
+        Use provided tool to get more information about tables or its data structure if needed.
+
+        EOT;
+        }
 
         /**
                 ### Query description from performance schema
@@ -135,6 +150,11 @@ readonly class QueryAnalyzer {
             }
         }
 
+        $tools = [];
+        if ($useDatabaseAccess) {
+            $tools[] = $this->queryTool;
+        }
+
         $request = new LLMRequest(
             model: AnthropicClient::MODEL_SONNET_37_20250219,
             conversation: new LLMConversation([
@@ -144,7 +164,8 @@ readonly class QueryAnalyzer {
             ]),
             temperature: 1.0,
             maxTokens: 30_000,
-            reasoningConfig: new ReasoningBudget(20_000)
+            reasoningConfig: new ReasoningBudget(20_000),
+            tools: $tools
         );
 
         return $this->llmChainClient->runAsync(

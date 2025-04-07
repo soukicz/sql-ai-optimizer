@@ -27,6 +27,11 @@ class AnalysisController extends BaseController {
     public function analyzePrompt(Request $request, int $id): Response {
         $queryIds = array_values($request->request->all('query_ids'));
 
+        $run = $this->stateDatabase->getRun($id);
+        if (!$run) {
+            throw new \Exception('Run not found');
+        }
+
         $promises = [];
         foreach ($queryIds as $queryId) {
             $queryData = $this->stateDatabase->getQuery($queryId);
@@ -37,7 +42,7 @@ class AnalysisController extends BaseController {
                 impactDescription: $queryData['impact_description'],
             );
 
-            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['query_sample'], $queryObject);
+            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['query_sample'], $queryObject, $run['use_database_access']);
         }
 
         // Process 5 promises concurrently
