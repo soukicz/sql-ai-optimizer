@@ -35,7 +35,7 @@ class Kernel extends BaseKernel {
 
         $container->services()
             ->set(FileCache::class)
-            ->arg('$cacheDir', __DIR__ . '/cache')
+            ->arg('$cacheDir', __DIR__ . '/var/cache')
             ->autowire()
             ->autoconfigure();
 
@@ -43,7 +43,7 @@ class Kernel extends BaseKernel {
             ->set(\Symfony\Component\Cache\Adapter\FilesystemAdapter::class)
             ->arg('$namespace', '')
             ->arg('$defaultLifetime', 0)
-            ->arg('$directory', __DIR__ . '/cache')
+            ->arg('$directory', __DIR__ . '/var/cache')
             ->autowire()
             ->autoconfigure();
 
@@ -61,7 +61,7 @@ class Kernel extends BaseKernel {
 
         $container->services()
             ->set(LLMFileLogger::class)
-            ->arg('$logPath', __DIR__ . '/log.md')
+            ->arg('$logPath', __DIR__ . '/var/log/llm.md')
             ->arg('$formatter', new Reference(MarkdownFormatter::class))
             ->autowire()
             ->autoconfigure();
