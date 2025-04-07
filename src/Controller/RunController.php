@@ -77,7 +77,7 @@ class RunController extends BaseController {
             $groupId = $this->stateDatabase->createGroup($runId, $group->getName(), $group->getDescription());
 
             foreach ($group->getQueries() as $query) {
-                if (empty($query->getSchema()) || $query->getSchema() === 'NULL') {
+                if (empty($query->getSchema()) || $query->getSchema() === 'NULL' || $query->getSchema() === 'unknown') {
                     continue;
                 }
 

@@ -50,24 +50,26 @@ readonly class QueryAnalyzer {
         $promptSql = $rawSql ?? $candidateQuery->getQueryText();
 
         $prompt = <<<EOT
-        I need help with optimizing MySQL 8 query. I have large database and query is consuming too much resources. I will provide you with example query and schema of tables used in query.
+        I need help with optimizing a MySQL 8 query. I have identified this query using performance schema as consuming too many resources. I will provide you with an example query and the schema of tables used in the query.
         
         Analyze all information and provide me with instructions to change the query, update schema or how to split to more manageable queries in PHP.
         
-        ### Query description from performance schema
-        
-        This description was created based on data from all query runs as reported by performance schema.
-
-        ```
-        {$candidateQuery->getImpactDescription()}
-        ```
-
         ### Query
         ```
         $promptSql
         ```
 
         EOT;
+
+        /**
+                ### Query description from performance schema
+
+                This description was created based on data from all query runs as reported by performance schema.
+
+                ```
+                {$candidateQuery->getImpactDescription()}
+                ```
+        */
 
         if (isset($explainJson)) {
             $prompt .= <<<EOT
@@ -76,6 +78,7 @@ readonly class QueryAnalyzer {
         ```
         $explainJson
         ```
+
         EOT;
         }
 
@@ -89,6 +92,47 @@ readonly class QueryAnalyzer {
                 ->query('SHOW CREATE TABLE %n', $table)->fetch()['Create Table'];
 
             $prompt .= "\n\n#### $table\n```\n$schema\n```\n";
+
+            // Add table indexes information
+            $indexes = $this->analyzedDatabase->getConnection()
+                ->query('SHOW INDEX FROM %n', $table)->fetchAll();
+
+            if (!empty($indexes)) {
+                $prompt .= "\n#### Indexes for $table\n```\n";
+
+                // Group indexes by name to handle multi-column indexes
+                $groupedIndexes = [];
+                foreach ($indexes as $index) {
+                    $indexName = $index['Key_name'];
+                    if (!isset($groupedIndexes[$indexName])) {
+                        $groupedIndexes[$indexName] = [
+                            'name' => $indexName,
+                            'columns' => [],
+                            'unique' => !$index['Non_unique'],
+                            'index_type' => $index['Index_type'],
+                        ];
+                    }
+                    // Sort columns by their position in the index
+                    $groupedIndexes[$indexName]['columns'][$index['Seq_in_index']] = $index['Column_name'];
+                }
+
+                // Generate SQL for each index
+                foreach ($groupedIndexes as $index) {
+                    // Skip PRIMARY key as it's already in CREATE TABLE statement
+                    if ($index['name'] === 'PRIMARY') {
+                        continue;
+                    }
+
+                    // Sort columns by position
+                    ksort($index['columns']);
+                    $columnList = implode(', ', $index['columns']);
+
+                    // Build the CREATE INDEX statement
+                    $uniqueKeyword = $index['unique'] ? 'UNIQUE ' : '';
+                    $prompt .= "ALTER TABLE `$table` ADD {$uniqueKeyword}INDEX `{$index['name']}` ($columnList) USING {$index['index_type']};\n";
+                }
+                $prompt .= "```\n";
+            }
         }
 
         $request = new LLMRequest(
