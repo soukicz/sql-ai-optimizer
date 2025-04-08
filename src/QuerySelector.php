@@ -4,6 +4,7 @@ namespace Soukicz\SqlAiOptimizer;
 
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
+use Soukicz\Llm\Client\LLMClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
@@ -18,7 +19,7 @@ use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
 readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
-        private AnthropicClient $anthropicClient,
+        private LLMClient $llmClient,
         private PerformanceSchemaQueryTool $performanceSchemaQueryTool
     ) {
     }
@@ -108,7 +109,7 @@ readonly class QuerySelector {
         );
 
         $response = $this->llmChainClient->run(
-            client: $this->anthropicClient,
+            client: $this->llmClient,
             request: $request,
         );
 

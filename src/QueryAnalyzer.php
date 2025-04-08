@@ -6,6 +6,7 @@ use Dibi\DriverException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
+use Soukicz\Llm\Client\LLMClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
@@ -19,7 +20,7 @@ use Soukicz\SqlAiOptimizer\Tool\QueryTool;
 readonly class QueryAnalyzer {
     public function __construct(
         private LLMChainClient $llmChainClient,
-        private AnthropicClient $anthropicClient,
+        private LLMClient $llmClient,
         private AnalyzedDatabase $analyzedDatabase,
         private StateDatabase $stateDatabase,
         private QueryTool $queryTool,

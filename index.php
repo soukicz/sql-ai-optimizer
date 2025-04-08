@@ -2,6 +2,7 @@
 use Soukicz\Llm\Cache\FileCache;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
+use Soukicz\Llm\Client\LLMClient;
 use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\SqlAiOptimizer\LLMFileLogger;
 use Soukicz\SqlAiOptimizer\StateDatabase;
@@ -48,7 +49,7 @@ class Kernel extends BaseKernel {
             ->autoconfigure();
 
         $container->services()
-            ->set(AnthropicClient::class)
+            ->set(LLMClient::class, AnthropicClient::class)
             ->arg('$apiKey', '%env(ANTHROPIC_API_KEY)%')
             ->arg('$cache', new Reference(FileCache::class))
             ->autowire()
