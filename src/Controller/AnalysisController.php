@@ -42,7 +42,7 @@ class AnalysisController extends BaseController {
                 impactDescription: $queryData['impact_description'],
             );
 
-            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['query_sample'], $queryObject, $run['use_database_access']);
+            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['query_sample'], $queryObject, $run['use_query_sample'], $run['use_database_access']);
         }
 
         // Process 5 promises concurrently

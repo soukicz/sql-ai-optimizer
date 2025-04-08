@@ -28,7 +28,7 @@ readonly class QueryAnalyzer {
     ) {
     }
 
-    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery, bool $useDatabaseAccess): PromiseInterface {
+    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery, bool $useQuerySample,bool $useDatabaseAccess): PromiseInterface {
         if (!$rawSql) {
             $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
             if ($rawSql) {
@@ -52,7 +52,11 @@ readonly class QueryAnalyzer {
             }
         }
 
-        $promptSql = $rawSql ?? $candidateQuery->getQueryText();
+        if ($rawSql && $useQuerySample) {
+            $promptSql = $rawSql;
+        } else {
+            $promptSql = $candidateQuery->getQueryText();
+        }
 
         $prompt = <<<EOT
         I need help with optimizing a MySQL 8 query. I have identified this query using performance schema as consuming too many resources. I will provide you with an example query and the schema of tables used in the query.

@@ -62,7 +62,6 @@ class RunController extends BaseController {
                 'queries' => $queries,
                 'missingSqlCount' => $missingSqlCount,
                 'specialInstructions' => $specialInstructions,
-                'useQuerySample' => (bool)$run['use_query_sample'],
             ])
         );
     }
@@ -89,11 +88,8 @@ class RunController extends BaseController {
                     continue;
                 }
 
-                if ($useQuerySample) {
-                    $rawSql = $this->analyzedDatabase->getQueryText($query->getDigest(), $query->getSchema());
-                } else {
-                    $rawSql = null;
-                }
+                $rawSql = $this->analyzedDatabase->getQueryText($query->getDigest(), $query->getSchema());
+
                 $this->stateDatabase->createQuery(
                     runId: $runId,
                     groupId: $groupId,
@@ -120,12 +116,6 @@ class RunController extends BaseController {
             return new JsonResponse([
                 'error' => 'Run not found',
             ], 404);
-        }
-
-        if (!$run['use_query_sample']) {
-            return new JsonResponse([
-                'error' => 'Query sample is not used for this run',
-            ], 400);
         }
 
         $digests = [];

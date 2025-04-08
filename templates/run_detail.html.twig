@@ -46,7 +46,7 @@
                 </div>
             {% endif %}
 
-            {% if useQuerySample and missingSqlCount > 0 %}
+            {% if missingSqlCount > 0 %}
                 <div class="alert alert-warning mt-4">
                     <i class="bi bi-exclamation-triangle me-2"></i> A total of <strong>{{ missingSqlCount }}</strong> queries didn't get SQL text on the first try and analysis cannot use real query plan data.
                                             
