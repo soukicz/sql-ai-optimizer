@@ -8,7 +8,7 @@ use Soukicz\Llm\Tool\ToolDefinition;
 use Soukicz\Llm\Tool\ToolResponse;
 use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 
-class QueryTool extends ToolDefinition {
+class QueryTool implements ToolDefinition {
     public function __construct(
         private DatabaseQueryExecutor $queryExecutor
     ) {
@@ -39,9 +39,7 @@ class QueryTool extends ToolDefinition {
         ];
     }
 
-    public function handle(string $id, array $input): PromiseInterface {
-        $result = $this->queryExecutor->executeQuery($input['database'], $input['query'], true);
-
-        return Create::promiseFor(new ToolResponse($id, $result));
+    public function handle(array $input): ToolResponse {
+        return new ToolResponse($this->queryExecutor->executeQuery($input['database'], $input['query'], true));
     }
 }

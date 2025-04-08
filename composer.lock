@@ -1352,12 +1352,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/soukicz/php-llm.git",
-                "reference": "71a94300abcbcfff063aa577326b93aee1e12615"
+                "reference": "73c22d5636e6197905d009f8270b284b0a520874"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/soukicz/php-llm/zipball/71a94300abcbcfff063aa577326b93aee1e12615",
-                "reference": "71a94300abcbcfff063aa577326b93aee1e12615",
+                "url": "https://api.github.com/repos/soukicz/php-llm/zipball/73c22d5636e6197905d009f8270b284b0a520874",
+                "reference": "73c22d5636e6197905d009f8270b284b0a520874",
                 "shasum": ""
             },
             "require": {
@@ -1389,7 +1389,7 @@
                 "issues": "https://github.com/soukicz/php-llm/issues",
                 "source": "https://github.com/soukicz/php-llm/tree/master"
             },
-            "time": "2025-03-23T08:40:23+00:00"
+            "time": "2025-04-08T16:28:49+00:00"
         },
         {
             "name": "spatie/commonmark-highlighter",

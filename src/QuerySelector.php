@@ -9,7 +9,7 @@ use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
-use Soukicz\Llm\Tool\ToolDefinition;
+use Soukicz\Llm\Tool\CallbackToolDefinition;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
 use Soukicz\SqlAiOptimizer\Result\CandidateResult;
@@ -74,7 +74,7 @@ readonly class QuerySelector {
             ],
         ];
 
-        $tools[] = new ToolDefinition(
+        $tools[] = new CallbackToolDefinition(
             name: 'submit_selection',
             description: 'Submit your selection of 20 most expensive queries',
             inputSchema: $submitInputSchema,
