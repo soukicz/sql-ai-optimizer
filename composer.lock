@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ccb095055c5434673964597fb680fbce",
+    "content-hash": "8315cc41a54dfdbcb54a2e024ff0dc0f",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -1352,12 +1352,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/soukicz/php-llm.git",
-                "reference": "73c22d5636e6197905d009f8270b284b0a520874"
+                "reference": "810fddb0de682771f95f8c674cd7dcb5ce920312"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/soukicz/php-llm/zipball/73c22d5636e6197905d009f8270b284b0a520874",
-                "reference": "73c22d5636e6197905d009f8270b284b0a520874",
+                "url": "https://api.github.com/repos/soukicz/php-llm/zipball/810fddb0de682771f95f8c674cd7dcb5ce920312",
+                "reference": "810fddb0de682771f95f8c674cd7dcb5ce920312",
                 "shasum": ""
             },
             "require": {
@@ -1365,7 +1365,8 @@
                 "guzzlehttp/guzzle": "^7.9",
                 "guzzlehttp/promises": "^2.0",
                 "guzzlehttp/psr7": "^2.7",
-                "psr/http-message": "^1.1 || ^2.0"
+                "psr/http-message": "^1.1 || ^2.0",
+                "swaggest/json-schema": "^0.12.43"
             },
             "require-dev": {
                 "phpstan/phpstan": "^2.1",
@@ -1389,7 +1390,7 @@
                 "issues": "https://github.com/soukicz/php-llm/issues",
                 "source": "https://github.com/soukicz/php-llm/tree/master"
             },
-            "time": "2025-04-08T16:28:49+00:00"
+            "time": "2025-04-08T16:45:22+00:00"
         },
         {
             "name": "spatie/commonmark-highlighter",

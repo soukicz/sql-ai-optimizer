@@ -14,7 +14,6 @@ use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\Result\CandidateQueryGroup;
 use Soukicz\SqlAiOptimizer\Result\CandidateResult;
 use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
-use Swaggest\JsonSchema\Schema;
 
 readonly class QuerySelector {
     public function __construct(
@@ -79,12 +78,6 @@ readonly class QuerySelector {
             description: 'Submit your selection of 20 most expensive queries',
             inputSchema: $submitInputSchema,
             handler: function (array $input) use (&$groups, $submitInputSchema): string {
-                try {
-                    Schema::import(json_decode(json_encode($submitInputSchema)))->in(json_decode(json_encode($input)));
-                } catch (\Exception $e) {
-                    return 'ERROR: Input is not matching expected schema: ' . $e->getMessage();
-                }
-
                 $groups[] = $input;
 
                 return 'Selection submitted';
