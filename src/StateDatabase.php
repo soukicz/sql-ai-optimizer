@@ -11,7 +11,7 @@ class StateDatabase {
     private string $databasePath;
 
     public function __construct(
-        #[Autowire(env: 'SQLITE_DATABASE_PATH', default: 'state.sqlite')]
+        #[Autowire(env: 'SQLITE_DATABASE_PATH')]
         string $databasePath
     ) {
         $this->databasePath = $databasePath;
@@ -98,8 +98,8 @@ class StateDatabase {
     public function updateQuery(
         int $queryId,
         ?string $queryText = null,
-        string $fixInput = null,
-        string $fixOutput = null,
+        ?string $fixInput = null,
+        ?string $fixOutput = null,
         ?string $explainResult = null
     ): void {
         $data = [];

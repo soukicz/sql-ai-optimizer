@@ -2,13 +2,11 @@
 
 namespace Soukicz\SqlAiOptimizer\Tool;
 
-use GuzzleHttp\Promise\Create;
-use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Tool\ToolDefinition;
 use Soukicz\Llm\Tool\ToolResponse;
 use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 
-class PerformanceSchemaQueryTool extends ToolDefinition {
+class PerformanceSchemaQueryTool implements ToolDefinition {
     public function __construct(
         private DatabaseQueryExecutor $queryExecutor
     ) {
@@ -35,9 +33,7 @@ class PerformanceSchemaQueryTool extends ToolDefinition {
         ];
     }
 
-    public function handle(string $id, array $input): PromiseInterface {
-        $result = $this->queryExecutor->executeQuery('performance_schema', $input['query'], true);
-
-        return Create::promiseFor(new ToolResponse($id, $result));
+    public function handle(array $input): ToolResponse {
+        return new ToolResponse($this->queryExecutor->executeQuery('performance_schema', $input['query'], true));
     }
 }

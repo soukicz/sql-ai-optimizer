@@ -2,8 +2,6 @@
 
 namespace Soukicz\SqlAiOptimizer\Tool;
 
-use GuzzleHttp\Promise\Create;
-use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Tool\ToolDefinition;
 use Soukicz\Llm\Tool\ToolResponse;
 use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
