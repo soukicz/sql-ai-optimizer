@@ -179,7 +179,7 @@ readonly class QueryAnalyzer {
         );
 
         return $this->llmChainClient->runAsync(
-            client: $this->anthropicClient,
+            client: $this->llmClient,
             request: $request,
         )->then(function (LLMResponse $response) use ($queryId, $rawSql, $explainJson, $prompt) {
             $this->stateDatabase->updateQuery(
