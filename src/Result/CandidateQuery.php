@@ -6,7 +6,7 @@ readonly class CandidateQuery {
     public function __construct(
         private string $schema,
         private string $digest,
-        private string $queryText,
+        private string $normalizedQuery,
         private string $impactDescription,
     ) {
     }
@@ -23,7 +23,7 @@ readonly class CandidateQuery {
         return $this->impactDescription;
     }
 
-    public function getQueryText(): string {
-        return $this->queryText;
+    public function getNormalizedQuery(): string {
+        return $this->normalizedQuery;
     }
 }

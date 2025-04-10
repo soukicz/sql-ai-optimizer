@@ -36,15 +36,15 @@ class RunController extends BaseController {
         $queries = $this->stateDatabase->getQueriesByRunId($id);
         $queries = array_map(function ($query) {
             $query = (array)$query;
-            $query['query_text_formatted'] = Helpers::dump($query['query_text'], true);
-            $query['query_text_formatted'] = preg_replace('/^<pre[^>]*>|<\/pre>$/', '', $query['query_text_formatted']);
+            $query['normalized_query_formatted'] = Helpers::dump($query['normalized_query'], true);
+            $query['normalized_query_formatted'] = preg_replace('/^<pre[^>]*>|<\/pre>$/', '', $query['normalized_query_formatted']);
 
             return $query;
         }, $queries);
 
         $missingSqlCount = 0;
         foreach ($queries as $query) {
-            if (empty($query['query_sample'])) {
+            if (empty($query['real_query'])) {
                 $missingSqlCount++;
             }
         }
@@ -70,13 +70,14 @@ class RunController extends BaseController {
     public function newRun(Request $request): Response {
         $results = $this->querySelector->getCandidateQueries($request->request->get('input'));
 
-        $useQuerySample = $request->request->getBoolean('use_query_sample', false);
+        $useRealQuery = $request->request->getBoolean('use_real_query', false);
 
         $this->stateDatabase->getConnection()->begin();
         $runId = $this->stateDatabase->createRun(
             $request->request->get('input'),
+            $this->analyzedDatabase->getHostnameWithPort(),
             $results->getDescription(),
-            $useQuerySample,
+            $useRealQuery,
             $request->request->getBoolean('use_database_access', false)
         );
 
@@ -94,8 +95,8 @@ class RunController extends BaseController {
                     runId: $runId,
                     groupId: $groupId,
                     digest: $query->getDigest(),
-                    queryText: $query->getQueryText(),
-                    querySample: $rawSql,
+                    normalizedQuery: $query->getNormalizedQuery(),
+                    realQuery: $rawSql,
                     schema: $query->getSchema(),
                     impactDescription: $query->getImpactDescription()
                 );
@@ -105,7 +106,7 @@ class RunController extends BaseController {
         $this->stateDatabase->getConnection()->commit();
 
         return new JsonResponse([
-            'url' => '/run/' . $runId,
+            'url' => '/run/' . $runId . '#first',
         ]);
     }
 
@@ -121,7 +122,7 @@ class RunController extends BaseController {
         $digests = [];
         $queries = [];
         $totalQueriesCount = $this->stateDatabase->getQueriesCount($id);
-        foreach ($this->stateDatabase->getQueriesWithoutQuerySample($id) as $query) {
+        foreach ($this->stateDatabase->getQueriesWithoutRealQuery($id) as $query) {
             if (!isset($digests[$query['digest']])) {
                 $digests[$query['digest']] = [];
             }
@@ -135,7 +136,7 @@ class RunController extends BaseController {
                 if (isset($digests[$sql['digest']])) {
                     foreach ($digests[$sql['digest']] as $i => $id) {
                         if ($queries[$id] === $sql['current_schema']) {
-                            $this->stateDatabase->updateQuerySample($id, $sql['sql_text']);
+                            $this->stateDatabase->setRealQuery($id, $sql['sql_text']);
                             unset($queries[$id]);
                             unset($digests[$sql['digest']][$i]);
                         }

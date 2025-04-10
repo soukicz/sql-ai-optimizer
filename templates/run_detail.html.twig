@@ -20,7 +20,7 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-4">
-                    <p class="mb-0"><strong>Created:</strong> {{ run.created_at|date('Y-m-d H:i:s') }}</p>
+                    <p class="mb-0"><strong>Created:</strong> {{ run.created_at|date('Y-m-d H:i:s') }} ({{ run.hostname }})</p>
                 </div>
                 <div class="col-md-4">
                     <p class="mb-0"><strong>Total Queries:</strong> <span class="badge bg-primary">{{ queries|length }}</span></p>
@@ -105,16 +105,10 @@
                                     <a class="btn btn-sm btn-link text-decoration-none" data-bs-toggle="collapse" href="#queryCode-{{ query.id }}">
                                         <i class="bi bi-code-slash me-1"></i> View SQL
                                     </a>
-                                    
-                                    {% if query.analyzed %}
-                                        <a href="/run/{{ run.id }}/query/{{ query.id }}" class="btn btn-sm btn-success">
-                                            <i class="bi bi-check-circle me-1"></i> View Analysis
-                                        </a>
-                                    {% endif %}
                                 </div>
                                 
                                 <div class="collapse mt-2" id="queryCode-{{ query.id }}">
-                                    <pre class="sql p-3 bg-light text-dark rounded">{{ query.query_text_formatted|raw }}</pre>
+                                    <pre class="sql p-3 bg-light text-dark rounded">{{ query.normalized_query_formatted|raw }}</pre>
                                 </div>
                             </div>
                         {% endfor %}
@@ -262,6 +256,13 @@
                 // Start the first fetch
                 performFetch();
             });
+        }
+
+        if(window.location.hash === '#first') {
+            window.location.hash = '';
+            if(retryButton) {
+                retryButton.click();
+            }
         }
 
         // Form submission handling

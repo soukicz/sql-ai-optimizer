@@ -11,7 +11,6 @@ class StateDatabase {
     private string $databasePath;
 
     public function __construct(
-        #[Autowire(env: 'SQLITE_DATABASE_PATH')]
         string $databasePath
     ) {
         $this->databasePath = $databasePath;
@@ -20,6 +19,10 @@ class StateDatabase {
 
     private function connect(): void {
         $needsInitialization = !file_exists($this->databasePath);
+
+        if (!is_dir(dirname($this->databasePath))) {
+            mkdir(dirname($this->databasePath), 0777, true);
+        }
 
         $this->connection = new Connection([
             'driver' => 'sqlite3',
@@ -47,11 +50,12 @@ class StateDatabase {
         return $this->connection;
     }
 
-    public function createRun(?string $input, string $output, bool $useQuerySample, bool $useDatabaseAccess): int {
+    public function createRun(?string $input, string $hostname, string $output, bool $useRealQuery, bool $useDatabaseAccess): int {
         $this->connection->query('INSERT INTO run', [
             'input' => $input,
+            'hostname' => $hostname,
             'output' => $output,
-            'use_query_sample' => $useQuerySample,
+            'use_real_query' => $useRealQuery,
             'use_database_access' => $useDatabaseAccess,
         ]);
 
@@ -73,8 +77,8 @@ class StateDatabase {
         int $groupId,
         string $digest,
         string $schema,
-        string $queryText,
-        ?string $querySample,
+        string $normalizedQuery,
+        ?string $realQuery,
         string $impactDescription
     ): void {
         $this->connection->query('INSERT INTO query', [
@@ -82,35 +86,25 @@ class StateDatabase {
             'digest' => $digest,
             'group_id' => $groupId,
             'schema' => $schema,
-            'query_text' => $queryText,
-            'query_sample' => $querySample,
+            'normalized_query' => $normalizedQuery,
+            'real_query' => $realQuery,
             'impact_description' => $impactDescription,
         ]);
     }
 
-    public function updateQuerySample(int $queryId, string $querySample): void {
+    public function setRealQuery(int $queryId, string $sql): void {
         $this->connection->update('query', [
-            'query_sample' => $querySample,
+            'real_query' => $sql,
         ])->where('id=%i', $queryId)
         ->execute();
     }
 
     public function updateQuery(
         int $queryId,
-        ?string $queryText = null,
-        ?string $fixInput = null,
-        ?string $fixOutput = null,
-        ?string $explainResult = null
+        ?string $fixOutput = null
     ): void {
         $data = [];
 
-        if ($queryText !== null) {
-            $data['query_sample'] = $queryText;
-        }
-        if ($explainResult !== null) {
-            $data['explain_result'] = $explainResult;
-        }
-        $data['fix_input'] = $fixInput;
         $data['fix_output'] = $fixOutput;
 
         $this->connection->update('query', $data)->where('id=%i', $queryId)->execute();
@@ -155,8 +149,8 @@ class StateDatabase {
         return null;
     }
 
-    public function getQueriesWithoutQuerySample(int $runId): array {
-        return $this->connection->query('SELECT id, digest, schema FROM query WHERE run_id = %i AND query_sample IS NULL', $runId)->fetchAll();
+    public function getQueriesWithoutRealQuery(int $runId): array {
+        return $this->connection->query('SELECT id, digest, schema FROM query WHERE run_id = %i AND real_query IS NULL', $runId)->fetchAll();
     }
 
     public function getQueriesCount(int $runId): int {

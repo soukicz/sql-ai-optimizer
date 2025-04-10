@@ -78,7 +78,7 @@ readonly class QuerySelector {
             name: 'submit_selection',
             description: 'Submit your selection of 20 most expensive queries',
             inputSchema: $submitInputSchema,
-            handler: function (array $input) use (&$groups, $submitInputSchema): string {
+            handler: function (array $input) use (&$groups): string {
                 $groups[] = $input;
 
                 return 'Selection submitted';
@@ -121,7 +121,7 @@ readonly class QuerySelector {
                 queries: array_map(fn (array $query) => new CandidateQuery(
                     schema: $query['schema'],
                     digest: $query['digest'],
-                    queryText: $query['query_sample'],
+                    normalizedQuery: $query['query_sample'],
                     impactDescription: $query['reason'],
                 ), $group['queries']),
             );

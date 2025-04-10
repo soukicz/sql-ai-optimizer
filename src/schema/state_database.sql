@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS run (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    use_query_sample INTEGER NOT NULL DEFAULT 0,
+    hostname TEXT NOT NULL,
+    use_real_query INTEGER NOT NULL DEFAULT 0,
     use_database_access INTEGER NOT NULL DEFAULT 0,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     input TEXT,
@@ -22,11 +23,11 @@ CREATE TABLE IF NOT EXISTS query (
     run_id INTEGER NOT NULL,
     group_id INTEGER NOT NULL,
     schema TEXT NOT NULL,
-    query_text TEXT,
+    normalized_query TEXT,
     impact_description TEXT,
     fix_input TEXT,
     fix_output TEXT,
-    query_sample TEXT,
+    real_query TEXT,
     explain_result TEXT,
     FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE CASCADE
 ); 

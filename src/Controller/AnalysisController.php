@@ -38,11 +38,11 @@ class AnalysisController extends BaseController {
             $queryObject = new CandidateQuery(
                 schema: $queryData['schema'],
                 digest: $queryData['digest'],
-                queryText: $queryData['query_text'],
+                normalizedQuery: $queryData['normalized_query'],
                 impactDescription: $queryData['impact_description'],
             );
 
-            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['query_sample'], $queryObject, $run['use_query_sample'], $run['use_database_access']);
+            $promises[] = $this->queryAnalyzer->analyzeQuery((int)$queryId, $queryData['real_query'], $queryObject, $run['use_real_query'], $run['use_database_access']);
         }
 
         // Process 5 promises concurrently
@@ -70,10 +70,10 @@ class AnalysisController extends BaseController {
             $html = $this->renderMarkdownWithHighlighting($markdown);
         }
 
-        if (empty($query['query_sample'])) {
-            $sql = Helpers::dump($query['query_text'], true);
+        if (empty($query['real_query'])) {
+            $sql = Helpers::dump($query['normalized_query'], true);
         } else {
-            $sql = Helpers::dump($query['query_sample'], true);
+            $sql = Helpers::dump($query['real_query'], true);
         }
         $sql = preg_replace('/^<pre[^>]*>|<\/pre>$/', '', $sql);
 

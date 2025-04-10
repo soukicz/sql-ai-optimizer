@@ -28,13 +28,13 @@ readonly class QueryAnalyzer {
     ) {
     }
 
-    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery, bool $useQuerySample,bool $useDatabaseAccess): PromiseInterface {
+    public function analyzeQuery(int $queryId, ?string $rawSql, CandidateQuery $candidateQuery, bool $useRealQuery, bool $useDatabaseAccess): PromiseInterface {
         if (!$rawSql) {
             $rawSql = $this->analyzedDatabase->getQueryText($candidateQuery->getDigest(), $candidateQuery->getSchema());
             if ($rawSql) {
-                $this->stateDatabase->updateQuerySample(
+                $this->stateDatabase->setRealQuery(
                     queryId: $queryId,
-                    querySample: $rawSql
+                    sql: $rawSql
                 );
             }
         }
@@ -52,10 +52,10 @@ readonly class QueryAnalyzer {
             }
         }
 
-        if ($rawSql && $useQuerySample) {
+        if ($rawSql && $useRealQuery) {
             $promptSql = $rawSql;
         } else {
-            $promptSql = $candidateQuery->getQueryText();
+            $promptSql = $candidateQuery->getNormalizedQuery();
         }
 
         $prompt = <<<EOT
@@ -181,13 +181,10 @@ readonly class QueryAnalyzer {
         return $this->llmChainClient->runAsync(
             client: $this->llmClient,
             request: $request,
-        )->then(function (LLMResponse $response) use ($queryId, $rawSql, $explainJson, $prompt) {
+        )->then(function (LLMResponse $response) use ($queryId) {
             $this->stateDatabase->updateQuery(
                 queryId: $queryId,
-                queryText: $rawSql,
-                fixInput: $prompt,
-                fixOutput: $response->getLastText(),
-                explainResult: $explainJson
+                fixOutput: $response->getLastText()
             );
         });
     }

@@ -7,13 +7,16 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class AnalyzedDatabase {
     private Connection $connection;
-
+    private string $hostname;
+    private int $port;
     public function __construct(
         #[Autowire(env: 'DATABASE_URL')]
         string $databaseUrl
     ) {
         // Parse the DATABASE_URL
         $parsedUrl = parse_url($databaseUrl);
+        $this->hostname = $parsedUrl['host'];
+        $this->port = $parsedUrl['port'] ?? null;
         $dbConfig = [
             'driver' => 'mysqli',
             'host' => $parsedUrl['host'],
@@ -26,6 +29,14 @@ class AnalyzedDatabase {
         ];
 
         $this->connection = new Connection($dbConfig);
+    }
+
+    public function getHostnameWithPort(): string {
+        if ($this->port) {
+            return $this->hostname . ':' . $this->port;
+        }
+
+        return $this->hostname;
     }
 
     public function getConnection(): Connection {
