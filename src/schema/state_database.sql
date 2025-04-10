@@ -28,6 +28,5 @@ CREATE TABLE IF NOT EXISTS query (
     fix_input TEXT,
     fix_output TEXT,
     real_query TEXT,
-    explain_result TEXT,
     FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE CASCADE
 ); 

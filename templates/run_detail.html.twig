@@ -193,7 +193,6 @@
                         window.shouldContinueFetching = false;
                         const modal = bootstrap.Modal.getInstance(document.getElementById('retryModal'));
                         modal.hide();
-                        window.location.reload();
                     });
                 }
                 
@@ -203,6 +202,11 @@
                 // Show modal
                 const modal = new bootstrap.Modal(document.getElementById('retryModal'));
                 modal.show();
+                
+                // Add event listener to reload page when modal is hidden
+                document.getElementById('retryModal').addEventListener('hidden.bs.modal', function() {
+                    window.location.reload();
+                });
                 
                 // Start fetch loop
                 const url = retryButton.getAttribute('href');
