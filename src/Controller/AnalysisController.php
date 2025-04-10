@@ -4,6 +4,7 @@ namespace Soukicz\SqlAiOptimizer\Controller;
 
 use Dibi\Helpers;
 use GuzzleHttp\Promise\Each;
+use Soukicz\Llm\LLMConversation;
 use Soukicz\SqlAiOptimizer\QueryAnalyzer;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\StateDatabase;
@@ -62,12 +63,50 @@ class AnalysisController extends BaseController {
 
         $group = $this->stateDatabase->getGroup($query['group_id']);
 
-        $markdown = $query['fix_output'];
+        $conversation = LLMConversation::fromJson(json_decode($query['llm_conversation'], true));
 
-        // Convert markdown to HTML with syntax highlighting
-        $html = '';
-        if (!empty($markdown)) {
-            $html = $this->renderMarkdownWithHighlighting($markdown);
+        $messages = [];
+        $firstUser = true;
+        foreach ($conversation->getMessages() as $message) {
+            if (!$message->isAssistant() && !$message->isUser()) {
+                continue;
+            }
+            if ($message->isUser() && $firstUser) {
+                $firstUser = false;
+                continue;
+            }
+
+            if ($message->isUser()) {
+                foreach ($message->getContents() as $content) {
+                    $messages[] = [
+                        'role' => 'user',
+                        'content' => nl2br(htmlspecialchars($content->getText(), ENT_QUOTES)),
+                    ];
+                }
+            } else {
+                $onlyText = true;
+                foreach ($message->getContents() as $content) {
+                    if (!$content instanceof LLMMessageText) {
+                        $onlyText = false;
+                        break;
+                    }
+                }
+                if ($onlyText) {
+                    $messages[] = [
+                        'role' => 'assistant',
+                        'content' => nl2br(htmlspecialchars($message->getText(), ENT_QUOTES)),
+                    ];
+                } else {
+                    foreach ($message->getContents() as $content) {
+                        if ($content instanceof LLMMessageText) {
+                            $messages[] = [
+                                'role' => 'assistant',
+                                'content' => $this->renderMarkdownWithHighlighting($content->getText()),
+                            ];
+                        }
+                    }
+                }
+            }
         }
 
         if (empty($query['real_query'])) {
@@ -81,7 +120,7 @@ class AnalysisController extends BaseController {
             'query' => $query,
             'group' => $group,
             'sql' => $sql,
-            'recommendations' => $html,
+            'messages' => $messages,
             'backToRunUrl' => $this->router->generate('run.detail', ['id' => $query['run_id']]),
         ]));
     }

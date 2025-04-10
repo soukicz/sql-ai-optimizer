@@ -3,6 +3,7 @@
 namespace Soukicz\SqlAiOptimizer;
 
 use Dibi\Connection;
+use Soukicz\Llm\LLMConversation;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class StateDatabase {
@@ -99,14 +100,15 @@ class StateDatabase {
         ->execute();
     }
 
-    public function updateQuery(
+    public function updateConversation(
         int $queryId,
-        ?string $fixOutput = null
+        LLMConversation $conversation,
+        string $conversationMarkdown
     ): void {
         $data = [];
 
-        $data['fix_output'] = $fixOutput;
-
+        $data['llm_conversation'] = json_encode($conversation->jsonSerialize(), JSON_THROW_ON_ERROR);
+        $data['llm_conversation_markdown'] = $conversationMarkdown;
         $this->connection->update('query', $data)->where('id=%i', $queryId)->execute();
     }
 

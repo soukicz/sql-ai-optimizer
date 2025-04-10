@@ -41,16 +41,24 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h2 class="h4 mb-0">Optimization Recommendations</h2>
-        </div>
-        <div class="card-body">
-            <div class="markdown-content">
-                {{ recommendations|raw }}
+    {% for message in messages %}
+        <div class="card shadow-sm">
+            {% if message.role == 'user' %}
+                <div class="card-header bg-info text-white">
+                    <h2 class="h4 mb-0">User comment</h2>
+                </div>
+            {% else %}
+                <div class="card-header bg-success text-white">
+                    <h2 class="h4 mb-0">Optimization Recommendations</h2>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="markdown-content">
+                    {{ message.content|raw }}
+                </div>
             </div>
         </div>
-    </div>
+    {% endfor %}
 {% endblock %}
 
 {% block stylesheets %}

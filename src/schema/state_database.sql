@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS query (
     group_id INTEGER NOT NULL,
     schema TEXT NOT NULL,
     normalized_query TEXT,
-    impact_description TEXT,
-    fix_input TEXT,
-    fix_output TEXT,
     real_query TEXT,
+    impact_description TEXT,
+    llm_conversation TEXT,
+    llm_conversation_markdown TEXT,
     FOREIGN KEY (group_id) REFERENCES `group`(id) ON DELETE CASCADE
 ); 

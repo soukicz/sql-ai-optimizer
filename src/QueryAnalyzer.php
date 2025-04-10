@@ -11,6 +11,7 @@ use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\LLMResponse;
+use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
@@ -24,7 +25,8 @@ readonly class QueryAnalyzer {
         private AnalyzedDatabase $analyzedDatabase,
         private StateDatabase $stateDatabase,
         private QueryTool $queryTool,
-        private DatabaseQueryExecutor $databaseQueryExecutor
+        private DatabaseQueryExecutor $databaseQueryExecutor,
+        private MarkdownFormatter $markdownFormatter
     ) {
     }
 
@@ -182,9 +184,10 @@ readonly class QueryAnalyzer {
             client: $this->llmClient,
             request: $request,
         )->then(function (LLMResponse $response) use ($queryId) {
-            $this->stateDatabase->updateQuery(
+            $this->stateDatabase->updateConversation(
                 queryId: $queryId,
-                fixOutput: $response->getLastText()
+                conversation: $response->getConversation(),
+                conversationMarkdown: $this->markdownFormatter->responseToMarkdown($response->getConversation())
             );
         });
     }
