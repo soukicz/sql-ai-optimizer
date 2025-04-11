@@ -41,7 +41,7 @@
                 <div class="mb-3">
                     <label for="input" class="form-label">(optional) Specify what the analysis should focus on (e.g. "slow queries", "queries with high CPU usage", "queries that are not using indexes", specific database, only queries after a certain date, etc.):</label>
                     <em>If left blank, the analysis will check all databases and suggest changes on a best-effort basis.</em>
-                    <textarea class="form-control" id="input" name="input" rows="8" placeholder="e.g. Focus on queries with high CPU usage and consider only queries with last run in the last week">{{ prompt|default('') }}</textarea>
+                    <textarea class="form-control" id="input" name="input" rows="8" placeholder="e.g. Focus on queries with high CPU usage and consider only queries with last run in the last week"></textarea>
                 </div>
                 
                 <div class="mb-4">

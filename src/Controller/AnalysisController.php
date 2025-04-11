@@ -5,6 +5,9 @@ namespace Soukicz\SqlAiOptimizer\Controller;
 use Dibi\Helpers;
 use GuzzleHttp\Promise\Each;
 use Soukicz\Llm\LLMConversation;
+use Soukicz\Llm\MarkdownFormatter;
+use Soukicz\Llm\Message\LLMMessageReasoning;
+use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\SqlAiOptimizer\QueryAnalyzer;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
 use Soukicz\SqlAiOptimizer\StateDatabase;
@@ -20,7 +23,8 @@ class AnalysisController extends BaseController {
         private QueryAnalyzer $queryAnalyzer,
         private Environment $twig,
         private StateDatabase $stateDatabase,
-        private UrlGeneratorInterface $router
+        private UrlGeneratorInterface $router,
+        private MarkdownFormatter $markdownFormatter
     ) {
     }
 
@@ -54,6 +58,28 @@ class AnalysisController extends BaseController {
         ]);
     }
 
+    #[Route('/run/{id}/continue', name: 'run.continue', methods: ['POST'])]
+    public function continuePrompt(Request $request, int $id): Response {
+        $queryData = $this->stateDatabase->getQuery($id);
+        $run = $this->stateDatabase->getRun($queryData['run_id']);
+        /** @var \Soukicz\Llm\LLMResponse $response */
+        $response = $this->queryAnalyzer->continueConversation(
+            conversation: LLMConversation::fromJson(json_decode($queryData['llm_conversation'], true)),
+            prompt: $request->request->get('input'),
+            useDatabaseAccess: $run['use_database_access']
+        )->wait();
+
+        $this->stateDatabase->updateConversation(
+            queryId: $id,
+            conversation: $response->getConversation(),
+            conversationMarkdown: $this->markdownFormatter->responseToMarkdown($response)
+        );
+
+        return new JsonResponse([
+            'url' => $this->router->generate('query.detail', ['queryId' => $id]),
+        ]);
+    }
+
     #[Route('/query/{queryId}', name: 'query.detail')]
     public function queryDetail(int $queryId): Response {
         $query = $this->stateDatabase->getQuery($queryId);
@@ -78,25 +104,27 @@ class AnalysisController extends BaseController {
 
             if ($message->isUser()) {
                 foreach ($message->getContents() as $content) {
-                    $messages[] = [
-                        'role' => 'user',
-                        'content' => nl2br(htmlspecialchars($content->getText(), ENT_QUOTES)),
-                    ];
+                    if ($content instanceof LLMMessageText) {
+                        $messages[] = [
+                            'role' => 'user',
+                            'content' => nl2br(htmlspecialchars($content->getText(), ENT_QUOTES)),
+                        ];
+                    }
                 }
             } else {
                 $onlyText = true;
+
                 foreach ($message->getContents() as $content) {
-                    if (!$content instanceof LLMMessageText) {
+                    if ($content instanceof LLMMessageReasoning) {
+                        continue;
+                    }
+
+                    if (!($content instanceof LLMMessageText)) {
                         $onlyText = false;
                         break;
                     }
                 }
                 if ($onlyText) {
-                    $messages[] = [
-                        'role' => 'assistant',
-                        'content' => nl2br(htmlspecialchars($message->getText(), ENT_QUOTES)),
-                    ];
-                } else {
                     foreach ($message->getContents() as $content) {
                         if ($content instanceof LLMMessageText) {
                             $messages[] = [
@@ -122,6 +150,7 @@ class AnalysisController extends BaseController {
             'sql' => $sql,
             'messages' => $messages,
             'backToRunUrl' => $this->router->generate('run.detail', ['id' => $query['run_id']]),
+            'continueConversationUrl' => $this->router->generate('run.continue', ['id' => $queryId]),
         ]));
     }
 }

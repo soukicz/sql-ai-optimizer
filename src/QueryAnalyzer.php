@@ -162,6 +162,21 @@ readonly class QueryAnalyzer {
             }
         }
 
+        return $this->sendConversation(new LLMConversation([
+            LLMMessage::createFromUser([
+                new LLMMessageText($prompt),
+            ]),
+        ]), $useDatabaseAccess)
+        ->then(function (LLMResponse $response) use ($queryId) {
+            $this->stateDatabase->updateConversation(
+                queryId: $queryId,
+                conversation: $response->getConversation(),
+                conversationMarkdown: $this->markdownFormatter->responseToMarkdown($response)
+            );
+        });
+    }
+
+    private function sendConversation(LLMConversation $conversation, bool $useDatabaseAccess): PromiseInterface {
         $tools = [];
         if ($useDatabaseAccess) {
             $tools[] = $this->queryTool;
@@ -169,11 +184,7 @@ readonly class QueryAnalyzer {
 
         $request = new LLMRequest(
             model: AnthropicClient::MODEL_SONNET_37_20250219,
-            conversation: new LLMConversation([
-                LLMMessage::createFromUser([
-                    new LLMMessageText($prompt),
-                ]),
-            ]),
+            conversation: $conversation,
             temperature: 1.0,
             maxTokens: 30_000,
             reasoningConfig: new ReasoningBudget(20_000),
@@ -183,13 +194,13 @@ readonly class QueryAnalyzer {
         return $this->llmChainClient->runAsync(
             client: $this->llmClient,
             request: $request,
-        )->then(function (LLMResponse $response) use ($queryId) {
-            $this->stateDatabase->updateConversation(
-                queryId: $queryId,
-                conversation: $response->getConversation(),
-                conversationMarkdown: $this->markdownFormatter->responseToMarkdown($response->getConversation())
-            );
-        });
+        );
+    }
+
+    public function continueConversation(LLMConversation $conversation, string $prompt, bool $useDatabaseAccess): PromiseInterface {
+        $newConversation = $conversation->withMessage(LLMMessage::createFromUser([new LLMMessageText($prompt)]));
+
+        return $this->sendConversation($newConversation, $useDatabaseAccess);
     }
 
     /**
