@@ -8,7 +8,8 @@ use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 
 class PerformanceSchemaQueryTool implements ToolDefinition {
     public function __construct(
-        private DatabaseQueryExecutor $queryExecutor
+        private DatabaseQueryExecutor $queryExecutor,
+        private bool $cacheDatabaseResults
     ) {
     }
 
@@ -17,7 +18,7 @@ class PerformanceSchemaQueryTool implements ToolDefinition {
     }
 
     public function getDescription(): string {
-        return 'Run SQL query against performance_schema and return results as markdown table';
+        return 'Run SQL query against performance_schema and return results as markdown table. Only first 250 rows are returned.';
     }
 
     public function getInputSchema(): array {
@@ -34,6 +35,6 @@ class PerformanceSchemaQueryTool implements ToolDefinition {
     }
 
     public function handle(array $input): ToolResponse {
-        return new ToolResponse($this->queryExecutor->executeQuery('performance_schema', $input['query'], true));
+        return new ToolResponse($this->queryExecutor->executeQuery('performance_schema', $input['query'], $this->cacheDatabaseResults, 250));
     }
 }

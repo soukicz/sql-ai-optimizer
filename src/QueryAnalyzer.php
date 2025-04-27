@@ -7,7 +7,6 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude37Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
-use Soukicz\Llm\Client\LLMClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
@@ -22,7 +21,7 @@ use Soukicz\SqlAiOptimizer\Tool\QueryTool;
 readonly class QueryAnalyzer {
     public function __construct(
         private LLMChainClient $llmChainClient,
-        private LLMClient $llmClient,
+        private AnthropicClient $llmClient,
         private AnalyzedDatabase $analyzedDatabase,
         private StateDatabase $stateDatabase,
         private QueryTool $queryTool,
@@ -63,12 +62,10 @@ readonly class QueryAnalyzer {
 
         $prompt = <<<EOT
         I need help with optimizing a MySQL 8 query. I have identified this query using performance schema as consuming too many resources. I will provide you with an example query and the schema of tables used in the query.
-        
-        Analyze all information and provide me with instructions to change the query, update schema or how to split to more manageable queries in PHP.
-        
-        Database: {$candidateQuery->getSchema()}
 
-        Query digest: {$candidateQuery->getDigest()}
+        Use provided tool to get more information about tables or its data structure if needed -you can also use to check statistics in performance_schema by provided digest.
+
+        Analyze all information and provide me with instructions to change the query, update schema or how to split to more manageable queries in PHP.
 
         ### Query
         ```
@@ -85,16 +82,6 @@ readonly class QueryAnalyzer {
 
         EOT;
         }
-
-        /**
-                ### Query description from performance schema
-
-                This description was created based on data from all query runs as reported by performance schema.
-
-                ```
-                {$candidateQuery->getImpactDescription()}
-                ```
-        */
 
         if (isset($explainJson)) {
             $prompt .= <<<EOT
@@ -163,6 +150,16 @@ readonly class QueryAnalyzer {
             }
         }
 
+        $prompt .= <<<EOT
+        
+        ## General information
+
+        Database: {$candidateQuery->getSchema()}
+
+        Query digest: {$candidateQuery->getDigest()}
+
+        EOT;
+
         return $this->sendConversation(new LLMConversation([
             LLMMessage::createFromUser([
                 new LLMMessageText($prompt),
@@ -187,8 +184,8 @@ readonly class QueryAnalyzer {
             model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
             conversation: $conversation,
             temperature: 1.0,
-            maxTokens: 30_000,
-            reasoningConfig: new ReasoningBudget(20_000),
+            maxTokens: 50_000,
+            reasoningConfig: new ReasoningBudget(30_000),
             tools: $tools
         );
 

@@ -31,7 +31,7 @@
             <h5>SQL Query</h5>
             <pre class="sql p-3 bg-light text-dark rounded mb-4">{{ sql|raw }}</pre>
 
-            {% if query.explain_result is empty %}
+            {% if query.real_query is empty %}
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     Could not retrieve sample of real query and analysis is missing EXPLAIN result.

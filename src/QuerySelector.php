@@ -5,8 +5,10 @@ namespace Soukicz\SqlAiOptimizer;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude37Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
-use Soukicz\Llm\Client\LLMClient;
+use Soukicz\Llm\Client\OpenAI\Model\GPTo3;
+use Soukicz\Llm\Client\OpenAI\OpenAIClient;
 use Soukicz\Llm\Config\ReasoningBudget;
+use Soukicz\Llm\Config\ReasoningEffort;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\Message\LLMMessage;
@@ -20,7 +22,8 @@ use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
 readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
-        private LLMClient $llmClient,
+        private AnthropicClient $anthropicClient,
+        private OpenAIClient $llmClient,
         private PerformanceSchemaQueryTool $performanceSchemaQueryTool
     ) {
     }
@@ -86,32 +89,60 @@ readonly class QuerySelector {
             }
         );
 
+        $preparationPrompt = <<<EOT
+        I have MySQL 8 database server and I need to find queries that are consuming a lot of resources (memory, CPU, IOPS, ...) and are best candidates for optimization.
+        
+        I will provide you with tool to run read-only queries against performance_schema later but you will first have to formulate plan how to best find queries for optimization from different perspectives.
+
+        I am looking just for candidates for optimization, not for exact queries - I will need just query digests for now.
+        EOT;
+
+        if (!empty($specialInstrutions)) {
+            $preparationPrompt .= "\n\n**Special instructions:**\n\n" . $specialInstrutions;
+        }
+
+        $preparationResponse = $this->llmChainClient->run(
+            client: $this->llmClient,
+            request: new LLMRequest(
+                model: new GPTo3(GPTo3::VERSION_2025_04_16),
+                conversation: new LLMConversation([
+                    LLMMessage::createFromUser([new LLMMessageText($preparationPrompt)]),
+                    ]),
+                temperature: 1.0,
+                maxTokens: 30_000,
+                reasoningConfig: ReasoningEffort::HIGH
+            ),
+        );
+
+        $toolName = $this->performanceSchemaQueryTool->getName();
+
         $prompt = <<<EOT
-                I need help to optimize my SQL queries on MySQL 8 server. I will provide tool to query perfomance schema and get specific queries to optimize.
+        This is great! I will now provide you with tool "$toolName" to run read-only queries against database.
+        
+        Your task is to identify query groups from different perspectives like execution time, memory usage, IOPS usage, etc (as you planned previously). 
+        
+        Examine each group and find best query candicates for optimization (which will by done later).
 
-                Query optimization can be achieved from different perspectives like execution time, memory usage, IOPS usage, etc. You must multiple optimization types and request query candicates with different queries to performance schema.
-
-                After examinig each group, submit your selection of queries for this group using tool "submit_selection". I am expectiong to get at least four groups with 20 queries each.
+        After examinig each group, submit your selection of queries for this group using tool "submit_selection". I am expectiong to get at least four groups with at around 20 queries each.
         EOT;
 
         if (!empty($specialInstrutions)) {
             $prompt .= "\n\n**Special instructions:**\n\n" . $specialInstrutions;
         }
 
-        $request = new LLMRequest(
-            model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
-            conversation: new LLMConversation([
-                LLMMessage::createFromUser([new LLMMessageText($prompt)]),
-                ]),
-            tools: $tools,
-            temperature: 1.0,
-            maxTokens: 30_000,
-            reasoningConfig: new ReasoningBudget(5000)
-        );
+        $conversation = $preparationResponse->getConversation()
+        ->withMessage(LLMMessage::createFromUser([new LLMMessageText($prompt)]));
 
         $response = $this->llmChainClient->run(
-            client: $this->llmClient,
-            request: $request,
+            client: $this->anthropicClient,
+            request: new LLMRequest(
+                model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
+                conversation: $conversation,
+                tools: $tools,
+                temperature: 1.0,
+                maxTokens: 50_000,
+                reasoningConfig: new ReasoningBudget(20_000)
+            ),
         );
 
         $resultGroups = [];

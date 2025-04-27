@@ -2,10 +2,11 @@
 use Soukicz\Llm\Cache\FileCache;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
-use Soukicz\Llm\Client\LLMClient;
+use Soukicz\Llm\Client\OpenAI\OpenAIClient;
 use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\SqlAiOptimizer\LLMFileLogger;
 use Soukicz\SqlAiOptimizer\StateDatabase;
+use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
@@ -35,6 +36,12 @@ class Kernel extends BaseKernel {
         ->autoconfigure();
 
         $container->services()
+            ->set(PerformanceSchemaQueryTool::class)
+            ->arg('$cacheDatabaseResults', true)
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
             ->set(FileCache::class)
             ->arg('$cacheDir', __DIR__ . '/var/cache')
             ->autowire()
@@ -49,8 +56,16 @@ class Kernel extends BaseKernel {
             ->autoconfigure();
 
         $container->services()
-            ->set(LLMClient::class, AnthropicClient::class)
+            ->set(AnthropicClient::class)
             ->arg('$apiKey', '%env(ANTHROPIC_API_KEY)%')
+            ->arg('$cache', new Reference(FileCache::class))
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
+            ->set(OpenAIClient::class)
+            ->arg('$apiKey', '%env(OPENAI_API_KEY)%')
+            ->arg('$apiOrganization', '%env(OPENAI_ORGANIZATION)%')
             ->arg('$cache', new Reference(FileCache::class))
             ->autowire()
             ->autoconfigure();

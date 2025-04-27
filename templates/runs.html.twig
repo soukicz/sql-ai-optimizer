@@ -19,7 +19,7 @@
                 <div class="list-group">
                     {% for run in runs %}
                         <a href="/run/{{run.id}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            Run #{{ run.id }} - {{ run.created_at|date('Y-m-d H:i:s') }} ({{ run.hostname }})
+                            Run #{{ run.id }} - {{ run.date_created|date('Y-m-d H:i:s') }} ({{ run.hostname }})
                             <span class="badge bg-primary rounded-pill">details</span>
                         </a>
                     {% endfor %}
