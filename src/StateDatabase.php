@@ -158,4 +158,10 @@ class StateDatabase {
     public function getQueriesCount(int $runId): int {
         return $this->connection->query('SELECT COUNT(*) FROM query WHERE run_id = %i', $runId)->fetchSingle();
     }
+
+    public function deleteRun(int $runId): void {
+        $this->connection->query('DELETE FROM query WHERE run_id = %i', $runId);
+        $this->connection->query('DELETE FROM `group` WHERE run_id = %i', $runId);
+        $this->connection->query('DELETE FROM run WHERE id = %i', $runId);
+    }
 }
