@@ -5,10 +5,7 @@ namespace Soukicz\SqlAiOptimizer;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude37Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
-use Soukicz\Llm\Client\OpenAI\Model\GPTo3;
-use Soukicz\Llm\Client\OpenAI\OpenAIClient;
 use Soukicz\Llm\Config\ReasoningBudget;
-use Soukicz\Llm\Config\ReasoningEffort;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\Message\LLMMessage;
@@ -22,8 +19,7 @@ use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
 readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
-        private AnthropicClient $anthropicClient,
-        private OpenAIClient $llmClient,
+        private AnthropicClient $llmClient,
         private PerformanceSchemaQueryTool $performanceSchemaQueryTool
     ) {
     }
@@ -104,13 +100,13 @@ readonly class QuerySelector {
         $preparationResponse = $this->llmChainClient->run(
             client: $this->llmClient,
             request: new LLMRequest(
-                model: new GPTo3(GPTo3::VERSION_2025_04_16),
+                model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
                 conversation: new LLMConversation([
                     LLMMessage::createFromUser([new LLMMessageText($preparationPrompt)]),
                     ]),
                 temperature: 1.0,
-                maxTokens: 30_000,
-                reasoningConfig: ReasoningEffort::HIGH
+                maxTokens: 60_000,
+                reasoningConfig: new ReasoningBudget(30_000)
             ),
         );
 
@@ -134,7 +130,7 @@ readonly class QuerySelector {
         ->withMessage(LLMMessage::createFromUser([new LLMMessageText($prompt)]));
 
         $response = $this->llmChainClient->run(
-            client: $this->anthropicClient,
+            client: $this->llmClient,
             request: new LLMRequest(
                 model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
                 conversation: $conversation,

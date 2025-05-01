@@ -2,7 +2,6 @@
 use Soukicz\Llm\Cache\FileCache;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
 use Soukicz\Llm\Client\LLMChainClient;
-use Soukicz\Llm\Client\OpenAI\OpenAIClient;
 use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\SqlAiOptimizer\LLMFileLogger;
 use Soukicz\SqlAiOptimizer\StateDatabase;
@@ -58,14 +57,6 @@ class Kernel extends BaseKernel {
         $container->services()
             ->set(AnthropicClient::class)
             ->arg('$apiKey', '%env(ANTHROPIC_API_KEY)%')
-            ->arg('$cache', new Reference(FileCache::class))
-            ->autowire()
-            ->autoconfigure();
-
-        $container->services()
-            ->set(OpenAIClient::class)
-            ->arg('$apiKey', '%env(OPENAI_API_KEY)%')
-            ->arg('$apiOrganization', '%env(OPENAI_ORGANIZATION)%')
             ->arg('$cache', new Reference(FileCache::class))
             ->autowire()
             ->autoconfigure();
