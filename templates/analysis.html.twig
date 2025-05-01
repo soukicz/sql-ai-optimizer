@@ -3,11 +3,24 @@
 {% block title %}Query Analysis - SQL Optimizer{% endblock %}
 
 {% block content %}
+    {% if export is not defined %}
     <div class="mb-4">
-        <a href="{{ backToRunUrl }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Back to Query List
-        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ backToRunUrl }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Query List
+            </a>
+            <a href="{{ exportUrl }}" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i> Export as HTML
+            </a>
+        </div>
     </div>
+    {% else %}
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="text-muted mb-0">Exported on {{ "now"|date('Y-m-d H:i:s') }}</p>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
@@ -60,6 +73,7 @@
         </div>
     {% endfor %}
 
+    {% if export is not defined %}
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h2 class="h4 mb-0">Send additional info</h2>
@@ -82,6 +96,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 {% endblock %}
 
 {% block stylesheets %}
@@ -103,6 +118,7 @@
 {% endblock %}
 
 {% block javascripts %}
+{% if export is not defined %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
@@ -162,4 +178,16 @@
         });
     });
 </script>
+{% else %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.markdown-content pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    });
+</script>
+{% endif %}
 {% endblock %} 

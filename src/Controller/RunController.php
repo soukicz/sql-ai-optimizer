@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use ZipArchive;
 
 class RunController extends BaseController {
     public function __construct(
@@ -20,12 +21,13 @@ class RunController extends BaseController {
         private QuerySelector $querySelector,
         private Environment $twig,
         private StateDatabase $stateDatabase,
-        private UrlGeneratorInterface $router
+        private UrlGeneratorInterface $router,
+        private AnalysisController $analysisController
     ) {
     }
 
     #[Route('/run/{id}', name: 'run.detail')]
-    public function runDetail(int $id): Response {
+    public function runDetail(int $id, Request $request): Response {
         $run = $this->stateDatabase->getRun($id);
 
         if (!$run) {
@@ -54,16 +56,142 @@ class RunController extends BaseController {
             $specialInstructions = nl2br(htmlspecialchars($specialInstructions));
         }
 
+        $isExport = $request->query->has('export');
+        $templateVars = [
+            'summary' => $this->renderMarkdownWithHighlighting($run['output']),
+            'run' => $run,
+            'groups' => $groups,
+            'queries' => $queries,
+            'missingSqlCount' => $missingSqlCount,
+            'specialInstructions' => $specialInstructions,
+        ];
+
+        if ($isExport) {
+            if ($request->query->get('format') === 'zip') {
+                return $this->exportAsZip($id, $run, $groups, $queries, $templateVars);
+            }
+
+            $templateVars['export'] = true;
+            $content = $this->twig->render('run_detail.html.twig', $templateVars);
+
+            $response = new Response($content);
+            $response->headers->set('Content-Type', 'text/html');
+            $response->headers->set('Content-Disposition', 'attachment; filename="run-' . $id . '-export.html"');
+
+            return $response;
+        }
+
         return new Response(
-            $this->twig->render('run_detail.html.twig', [
-                'summary' => $this->renderMarkdownWithHighlighting($run['output']),
-                'run' => $run,
-                'groups' => $groups,
-                'queries' => $queries,
-                'missingSqlCount' => $missingSqlCount,
-                'specialInstructions' => $specialInstructions,
-            ])
+            $this->twig->render('run_detail.html.twig', $templateVars)
         );
+    }
+
+    /**
+     * Export run details and all queries as a ZIP file
+     */
+    private function exportAsZip(int $id, array $run, array $groups, array $queries, array $templateVars): Response {
+        $tempDir = sys_get_temp_dir() . '/sql-optimizer-export-' . uniqid();
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        // Add export flag and ZIP export specific flag
+        $templateVars['export'] = true;
+        $templateVars['zip_export'] = true;
+
+        // Render main run detail page
+        $content = $this->twig->render('run_detail.html.twig', $templateVars);
+        file_put_contents($tempDir . '/index.html', $content);
+
+        // Collect queries with analyzed data
+        $analyzedQueries = [];
+        foreach ($queries as $query) {
+            if (!empty($query['llm_conversation'])) {
+                $analyzedQueries[] = $query;
+            }
+        }
+
+        // Create a mock request for use with AnalysisController
+        $request = new Request();
+        $request->query->set('export', '1');
+        $request->query->set('zip_export', '1');
+
+        // Export each analyzed query using AnalysisController
+        foreach ($analyzedQueries as $query) {
+            // Get query content using the AnalysisController
+            $response = $this->analysisController->queryDetail($query['id'], $request);
+
+            // Modify the content to use local URLs for the ZIP file
+            $queryContent = $response->getContent();
+
+            // Replace the backToRunUrl with local reference
+            $queryContent = str_replace(
+                'href="' . $this->router->generate('run.detail', ['id' => $query['run_id']]) . '"',
+                'href="index.html"',
+                $queryContent
+            );
+
+            // Save to file
+            file_put_contents($tempDir . '/query' . $query['id'] . '.html', $queryContent);
+        }
+
+        // Create ZIP file
+        $zipFile = $tempDir . '/export.zip';
+        $zip = new ZipArchive();
+        if ($zip->open($zipFile, ZipArchive::CREATE) !== true) {
+            throw new \Exception("Cannot create ZIP file");
+        }
+
+        // Add all files to ZIP
+        $dir = new \RecursiveDirectoryIterator($tempDir, \RecursiveDirectoryIterator::SKIP_DOTS);
+        $iterator = new \RecursiveIteratorIterator($dir);
+        foreach ($iterator as $file) {
+            // Skip the ZIP file itself
+            if ($file->getPathname() === $zipFile) {
+                continue;
+            }
+
+            // Add file to ZIP with path relative to temp directory
+            $relativePath = substr($file->getPathname(), strlen($tempDir) + 1);
+            $zip->addFile($file->getPathname(), $relativePath);
+        }
+
+        $zip->close();
+
+        // Create response with ZIP file
+        $response = new Response(file_get_contents($zipFile));
+        $response->headers->set('Content-Type', 'application/zip');
+        $response->headers->set('Content-Disposition', 'attachment; filename="run-' . $id . '-export.zip"');
+
+        // Clean up temporary files (optional)
+        $this->removeDirectory($tempDir);
+
+        return $response;
+    }
+
+    /**
+     * Recursively remove a directory and its contents
+     */
+    private function removeDirectory(string $dir): void {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $objects = scandir($dir);
+        foreach ($objects as $object) {
+            if ($object === '.' || $object === '..') {
+                continue;
+            }
+
+            $path = $dir . '/' . $object;
+            if (is_dir($path)) {
+                $this->removeDirectory($path);
+            } else {
+                unlink($path);
+            }
+        }
+
+        rmdir($dir);
     }
 
     #[Route('/new-run', name: 'run.new', methods: ['POST'])]

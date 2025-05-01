@@ -81,7 +81,7 @@ class AnalysisController extends BaseController {
     }
 
     #[Route('/query/{queryId}', name: 'query.detail')]
-    public function queryDetail(int $queryId): Response {
+    public function queryDetail(int $queryId, Request $request): Response {
         $query = $this->stateDatabase->getQuery($queryId);
         if (!$query) {
             throw new \Exception('Query not found');
@@ -144,13 +144,39 @@ class AnalysisController extends BaseController {
         }
         $sql = preg_replace('/^<pre[^>]*>|<\/pre>$/', '', $sql);
 
-        return new Response($this->twig->render('analysis.html.twig', [
+        $isExport = $request->query->has('export');
+        $templateVars = [
             'query' => $query,
             'group' => $group,
             'sql' => $sql,
             'messages' => $messages,
             'backToRunUrl' => $this->router->generate('run.detail', ['id' => $query['run_id']]),
             'continueConversationUrl' => $this->router->generate('run.continue', ['id' => $queryId]),
-        ]));
+            'exportUrl' => $this->router->generate('query.detail', ['queryId' => $queryId, 'export' => 1]),
+        ];
+
+        if ($isExport) {
+            $templateVars['export'] = true;
+
+            // Pass zip_export flag if present
+            if ($request->query->has('zip_export')) {
+                $templateVars['zip_export'] = true;
+            }
+
+            $content = $this->twig->render('analysis.html.twig', $templateVars);
+
+            // Only set content disposition for direct download requests, not for ZIP exports
+            if (!$request->query->has('zip_export')) {
+                $response = new Response($content);
+                $response->headers->set('Content-Type', 'text/html');
+                $response->headers->set('Content-Disposition', 'attachment; filename="query-' . $queryId . '-export.html"');
+
+                return $response;
+            }
+
+            return new Response($content);
+        }
+
+        return new Response($this->twig->render('analysis.html.twig', $templateVars));
     }
 }

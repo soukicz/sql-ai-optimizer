@@ -3,16 +3,36 @@
 {% block title %}SQL AI Optimizer - Run #{{ run.id }}{% endblock %}
 
 {% block content %}
+    {% if export is not defined %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h2 mb-0">Run #{{ run.id }}</h1>
-        <a href="/" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Back to All Runs
-        </a>
+        <div>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="/run/{{ run.id }}?export=1">Single HTML</a></li>
+                    <li><a class="dropdown-item" href="/run/{{ run.id }}?export=1&format=zip">Complete ZIP</a></li>
+                </ul>
+            </div>
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to All Runs
+            </a>
+        </div>
     </div>
+    {% else %}
+    <div class="mb-4">
+        <h1 class="h2 mb-0">SQL AI Optimizer - Run #{{ run.id }}</h1>
+        <p class="text-muted">Exported on {{ "now"|date('Y-m-d H:i:s') }}</p>
+    </div>
+    {% endif %}
     
     {{ summary|raw }}
 
+    {% if export is not defined %}
     <form id="analyze-form" method="POST" action="/run/{{ run.id }}/analyze">
+    {% endif %}
     <div class="card mb-4">
         <div class="card-header">
             <h2 class="h5 mb-0">Run Information</h2>
@@ -25,12 +45,15 @@
                 <div class="col-md-4">
                     <p class="mb-0"><strong>Total Queries:</strong> <span class="badge bg-primary">{{ queries|length }}</span></p>
                 </div>
+                {% if export is not defined %}
                 <div class="col-md-4 text-end">
                     <button type="submit" form="analyze-form" class="btn btn-primary">
                         <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
                     </button>
                 </div>
+                {% endif %}
             </div>
+            {% if export is not defined %}
             <div class="row mt-2">
                 <div class="col-12 text-end">
                     <span class="small text-muted">
@@ -38,6 +61,7 @@
                     </span>
                 </div>
             </div>
+            {% endif %}
             
             {% if specialInstructions is not empty %}
                 <div class="alert alert-info mt-4">
@@ -46,7 +70,7 @@
                 </div>
             {% endif %}
 
-            {% if missingSqlCount > 0 %}
+            {% if missingSqlCount > 0 and export is not defined %}
                 <div class="alert alert-warning mt-4">
                     <i class="bi bi-exclamation-triangle me-2"></i> A total of <strong>{{ missingSqlCount }}</strong> queries didn't get SQL text on the first try and analysis cannot use real query plan data.
                                             
@@ -61,26 +85,32 @@
     {% if groups|length > 0 %}
         <h3 class="mb-3">Query Groups</h3>
         
-        
+        {% if export is not defined %}
             <input type="hidden" name="run_id" value="{{ run.id }}">
+        {% endif %}
             
             {% for group in groups %}
                 <div class="query-group shadow-sm mb-4">
                     <div class="query-group-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="h5 mb-0">{{ group.name }}</h4>
+                            {% if export is defined %}
+                            <span class="badge bg-primary rounded-pill">{{ queries|filter(q => q.group_id == group.id)|length }}</span>
+                            {% else %}
                             <a href="#" class="btn btn-sm btn-outline-secondary toggle-queries" data-target="queries-{{ loop.index }}">
                                 <span class="badge bg-primary rounded-pill">{{ queries|filter(q => q.group_id == group.id)|length }}</span>
                                 <i class="bi bi-chevron-down ms-1"></i>
                             </a>
+                            {% endif %}
                         </div>
                         <p class="text-muted mb-0 mt-2">{{ group.description }}</p>
                     </div>
                     
-                    <div class="p-3 d-none" id="queries-{{ loop.index }}">
+                    <div class="p-3 {% if export is not defined %}d-none{% endif %}" id="queries-{{ loop.index }}">
                         {% set group_queries = queries|filter(q => q.group_id == group.id) %}
                         {% for query in group_queries %}
                             <div class="query-box mb-3 pb-3 border-bottom">
+                                {% if export is not defined %}
                                 <div class="form-check">
                                     {% if query.llm_conversation is empty %}
                                         <input class="form-check-input" type="checkbox" name="query_ids[]" value="{{ query.id }}" id="query-{{ query.id }}">
@@ -89,18 +119,30 @@
                                         {{ query.impact_description }}
                                     </label>
                                 </div>
+                                {% else %}
+                                <div>
+                                    <strong>{{ query.impact_description }}</strong>
+                                </div>
+                                {% endif %}
                             
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="mt-2 small text-muted">
                                         <i class="bi bi-database me-1"></i> Schema: <strong>{{ query.schema }}</strong>
                                     </div> 
                                     {% if query.llm_conversation is not empty %}
-                                        <a href="/query/{{ query.id }}" class="btn btn-sm btn-success">
-                                            <i class="bi bi-search me-1"></i> View Analysis
-                                        </a>
+                                        {% if export is not defined %}
+                                            <a href="/query/{{ query.id }}" class="btn btn-sm btn-success">
+                                                <i class="bi bi-search me-1"></i> View Analysis
+                                            </a>
+                                        {% elseif zip_export is defined %}
+                                            <a href="query{{ query.id }}.html" class="btn btn-sm btn-success">
+                                                <i class="bi bi-search me-1"></i> View Analysis
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 
+                                {% if export is not defined %}
                                 <div class="mt-2">
                                     <a class="btn btn-sm btn-link text-decoration-none" data-bs-toggle="collapse" href="#queryCode-{{ query.id }}">
                                         <i class="bi bi-code-slash me-1"></i> View SQL
@@ -108,6 +150,12 @@
                                 </div>
                                 
                                 <div class="collapse mt-2" id="queryCode-{{ query.id }}">
+                                {% else %}
+                                <div class="mt-2">
+                                    <strong><i class="bi bi-code-slash me-1"></i> SQL:</strong>
+                                </div>
+                                <div class="mt-2">
+                                {% endif %}
                                     <pre class="sql p-3 bg-light text-dark rounded">{{ query.normalized_query_formatted|raw }}</pre>
                                 </div>
                             </div>
@@ -116,6 +164,7 @@
                 </div>
             {% endfor %}
             
+            {% if export is not defined %}
             <div class="text-end mt-4 mb-4">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-lightning-charge me-1"></i> Analyze Selected Queries
@@ -126,15 +175,19 @@
                     </span>
                 </div>
             </div>
+            {% endif %}
     {% else %}
         <div class="alert alert-info">
             <i class="bi bi-info-circle me-2"></i> No query groups found for this run.
         </div>
     {% endif %}
+    {% if export is not defined %}
     </form>
+    {% endif %}
 {% endblock %}
 
 {% block javascripts %}
+{% if export is not defined %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle query groups
@@ -330,4 +383,5 @@
         });
     });
 </script>
+{% endif %}
 {% endblock %} 
