@@ -98,8 +98,25 @@ readonly class QueryAnalyzer {
         ### Schema
         EOT;
 
+        // Get all actual tables from the database for case-insensitive matching
         $this->analyzedDatabase->getConnection()->query('USE %n', $candidateQuery->getSchema());
-        foreach ($this->getTablesFromSelectQuery($promptSql) as $table) {
+        $actualTables = $this->analyzedDatabase->getConnection()
+            ->query('SHOW TABLES')->fetchAll();
+        $actualTableMap = [];
+        foreach ($actualTables as $tableRow) {
+            $tableName = array_values((array)$tableRow)[0]; // Get the table name from the result
+            $actualTableMap[strtolower($tableName)] = $tableName; // Store with lowercase key for case-insensitive lookup
+        }
+
+        foreach ($this->getTablesFromSelectQuery($promptSql) as $extractedTable) {
+            // Find the correct case-sensitive table name
+            $lookupKey = strtolower($extractedTable);
+            if (!isset($actualTableMap[$lookupKey])) {
+                continue; // Skip if table doesn't exist in the database
+            }
+            
+            $table = $actualTableMap[$lookupKey]; // Use the correctly cased table name
+            
             $schema = $this->analyzedDatabase->getConnection()
                 ->query('SHOW CREATE TABLE %n', $table)->fetch()['Create Table'];
 
