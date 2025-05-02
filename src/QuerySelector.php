@@ -85,49 +85,22 @@ readonly class QuerySelector {
             }
         );
 
-        $preparationPrompt = <<<EOT
-        I have MySQL 8 database server and I need to find queries that are consuming a lot of resources (memory, CPU, IOPS, ...) and are best candidates for optimization.
-        
-        I will provide you with tool to run read-only queries against performance_schema later but you will first have to formulate plan how to best find queries for optimization from different perspectives.
-
-        I am looking just for candidates for optimization, not for exact queries - I will need just query digests for now.
-        EOT;
-
-        if (!empty($specialInstrutions)) {
-            $preparationPrompt .= "\n\n**Special instructions:**\n\n" . $specialInstrutions;
-        }
-
-        $preparationResponse = $this->llmChainClient->run(
-            client: $this->llmClient,
-            request: new LLMRequest(
-                model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
-                conversation: new LLMConversation([
-                    LLMMessage::createFromUser([new LLMMessageText($preparationPrompt)]),
-                    ]),
-                temperature: 1.0,
-                maxTokens: 60_000,
-                reasoningConfig: new ReasoningBudget(30_000)
-            ),
-        );
-
-        $toolName = $this->performanceSchemaQueryTool->getName();
-
         $prompt = <<<EOT
-        This is great! I will now provide you with tool "$toolName" to run read-only queries against database.
-        
-        Your task is to identify query groups from different perspectives like execution time, memory usage, IOPS usage, etc (as you planned previously). 
-        
-        Examine each group and find best query candicates for optimization (which will by done later).
+        I need help to optimize my SQL queries on MySQL 8 server. I will provide tool to query perfomance schema and get specific queries to optimize.
 
-        After examinig each group, submit your selection of queries for this group using tool "submit_selection". I am expectiong to get at least four groups with at around 20 queries each.
+        Query optimization can be achieved from different perspectives like execution time, memory usage, IOPS usage, etc. You must multiple optimization types and request query candicates with different queries to performance schema.
+
+        After examinig each group, submit your selection of queries for this group using tool "submit_selection". I am expecting to get at least four groups with 20 queries each.
+
         EOT;
 
         if (!empty($specialInstrutions)) {
             $prompt .= "\n\n**Special instructions:**\n\n" . $specialInstrutions;
         }
-
-        $conversation = $preparationResponse->getConversation()
-        ->withMessage(LLMMessage::createFromUser([new LLMMessageText($prompt)]));
+      
+        $conversation = new LLMConversation([
+            LLMMessage::createFromUser([new LLMMessageText($prompt)]),
+        ]);
 
         $response = $this->llmChainClient->run(
             client: $this->llmClient,
