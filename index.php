@@ -6,6 +6,7 @@ use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\SqlAiOptimizer\LLMFileLogger;
 use Soukicz\SqlAiOptimizer\StateDatabase;
 use Soukicz\SqlAiOptimizer\Tool\PerformanceSchemaQueryTool;
+use Soukicz\SqlAiOptimizer\Tool\QueryTool;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
@@ -36,6 +37,12 @@ class Kernel extends BaseKernel {
 
         $container->services()
             ->set(PerformanceSchemaQueryTool::class)
+            ->arg('$cacheDatabaseResults', false)
+            ->autowire()
+            ->autoconfigure();
+
+        $container->services()
+            ->set(QueryTool::class)
             ->arg('$cacheDatabaseResults', false)
             ->autowire()
             ->autoconfigure();
