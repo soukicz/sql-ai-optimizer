@@ -9,23 +9,23 @@ You can also specify special instructions for the AI to follow (e.g. "focus on q
 SQL AI Optimizer is a PHP application that connects to databases, analyzes SQL queries, and uses Anthropic's AI models to suggest optimizations, identify performance bottlenecks, and provide insights to improve database efficiency.
 
 ## Screenshots
-![Index](./assets/index.png)
+![Index](./assets/index.png | width=600)
 
 --------------------------------
 
-![Groups](./assets/groups.png)
+![Groups](./assets/groups.png | width=600)
 
 --------------------------------
 
-![Analysis summary](./assets/analysis-summary.png)
+![Analysis summary](./assets/analysis-summary.png | width=600)
 
 --------------------------------
 
-![Group](./assets/group.png)  
+![Group](./assets/group.png | width=600)  
 
 --------------------------------
 
-![Result](./assets/result.png)  
+![Result](./assets/result.png | width=600)  
 
 ## Features
 
