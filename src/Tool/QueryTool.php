@@ -8,7 +8,8 @@ use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 
 class QueryTool implements ToolDefinition {
     public function __construct(
-        private DatabaseQueryExecutor $queryExecutor
+        private DatabaseQueryExecutor $queryExecutor,
+        private bool $cacheDatabaseResults
     ) {
     }
 
@@ -38,6 +39,6 @@ class QueryTool implements ToolDefinition {
     }
 
     public function handle(array $input): ToolResponse {
-        return new ToolResponse($this->queryExecutor->executeQuery($input['database'], $input['query'], false));
+        return new ToolResponse($this->queryExecutor->executeQuery($input['database'], $input['query'], $this->cacheDatabaseResults, 250));
     }
 }
