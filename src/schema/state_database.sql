@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS run (
     use_real_query INTEGER NOT NULL DEFAULT 0,
     use_database_access INTEGER NOT NULL DEFAULT 0,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    llm_conversation TEXT,
+    llm_conversation_markdown TEXT,
     input TEXT,
     output TEXT NOT NULL
 );

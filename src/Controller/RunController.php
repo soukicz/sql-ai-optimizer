@@ -206,7 +206,9 @@ class RunController extends BaseController {
             $this->analyzedDatabase->getHostnameWithPort(),
             $results->getDescription(),
             $useRealQuery,
-            $request->request->getBoolean('use_database_access', false)
+            $request->request->getBoolean('use_database_access', false),
+            $results->getConversation(),
+            $results->getFormattedConversation()
         );
 
         foreach ($results->getGroups() as $group) {

@@ -51,13 +51,23 @@ class StateDatabase {
         return $this->connection;
     }
 
-    public function createRun(?string $input, string $hostname, string $output, bool $useRealQuery, bool $useDatabaseAccess): int {
+    public function createRun(
+        ?string $input,
+        string $hostname,
+        string $output,
+        bool $useRealQuery,
+        bool $useDatabaseAccess,
+        LLMConversation $conversation,
+        string $conversationMarkdown
+    ): int {
         $this->connection->query('INSERT INTO run', [
             'input' => $input,
             'hostname' => $hostname,
             'output' => $output,
             'use_real_query' => $useRealQuery,
             'use_database_access' => $useDatabaseAccess,
+            'llm_conversation' => json_encode($conversation->jsonSerialize(), JSON_THROW_ON_ERROR),
+            'llm_conversation_markdown' => $conversationMarkdown,
         ]);
 
         return $this->connection->getInsertId();

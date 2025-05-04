@@ -8,6 +8,7 @@ use Soukicz\Llm\Client\LLMChainClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
+use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\Llm\Message\LLMMessage;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\Llm\Tool\CallbackToolDefinition;
@@ -20,7 +21,8 @@ readonly class QuerySelector {
     public function __construct(
         private LLMChainClient $llmChainClient,
         private AnthropicClient $llmClient,
-        private PerformanceSchemaQueryTool $performanceSchemaQueryTool
+        private PerformanceSchemaQueryTool $performanceSchemaQueryTool,
+        private MarkdownFormatter $markdownFormatter
     ) {
     }
 
@@ -130,7 +132,9 @@ readonly class QuerySelector {
 
         return new CandidateResult(
             description: $response->getLastText(),
+            conversation: $conversation,
             groups: $resultGroups,
+            formattedConversation: $this->markdownFormatter->responseToMarkdown($response)
         );
     }
 }
