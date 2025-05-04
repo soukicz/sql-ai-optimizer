@@ -36,7 +36,7 @@ class Kernel extends BaseKernel {
 
         $container->services()
             ->set(PerformanceSchemaQueryTool::class)
-            ->arg('$cacheDatabaseResults', true)
+            ->arg('$cacheDatabaseResults', false)
             ->autowire()
             ->autoconfigure();
 

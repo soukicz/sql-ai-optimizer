@@ -38,6 +38,6 @@ class QueryTool implements ToolDefinition {
     }
 
     public function handle(array $input): ToolResponse {
-        return new ToolResponse($this->queryExecutor->executeQuery($input['database'], $input['query'], true));
+        return new ToolResponse($this->queryExecutor->executeQuery($input['database'], $input['query'], false));
     }
 }
