@@ -71,7 +71,7 @@ The LLM is instructed to only get statistical data from the database, but it can
 
 2. Install dependencies:
    ```
-   composer install
+   composer install --no-dev
    ```
 
 3. Create a `.env` file in the project root with your [Anthropic API key](https://console.anthropic.com/settings/keys) and database connection string:
