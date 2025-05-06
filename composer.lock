@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9d27ae623a308aba7f149b00dcdf3875",
+    "content-hash": "3d30fced6559cbb648163f3d6bfc5239",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -1348,7 +1348,7 @@
         },
         {
             "name": "soukicz/llm",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/soukicz/php-llm.git",
@@ -1372,7 +1372,6 @@
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^10.5"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1398,7 +1397,7 @@
             ],
             "support": {
                 "issues": "https://github.com/soukicz/php-llm/issues",
-                "source": "https://github.com/soukicz/php-llm/tree/master"
+                "source": "https://github.com/soukicz/php-llm/tree/0.2.0"
             },
             "time": "2025-05-02T17:39:13+00:00"
         },
@@ -3584,9 +3583,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "soukicz/llm": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -3594,6 +3591,6 @@
         "ext-mysqli": "*",
         "ext-sqlite3": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
