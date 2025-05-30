@@ -82,9 +82,14 @@ The LLM is instructed to only get statistical data from the database, but it can
 
 ## Usage
 
-1. Start the application:
+1a. Start the application (without docker):
    ```
    php -S 127.0.0.1:8000
+   ```
+
+1b. Start the application (with docker):
+   ```
+   docker run --rm -it --env-file .env -p 8000:8000 $(docker build -q .)
    ```
 
 2. Connect to your database via SSH tunnel if needed:

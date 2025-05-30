@@ -26,9 +26,11 @@ class Kernel extends BaseKernel {
             'secret' => 'S0ME_SECRET',
         ]);
 
-        // Load environment variables from .env file
-        $dotenv = new \Symfony\Component\Dotenv\Dotenv();
-        $dotenv->loadEnv(__DIR__ . '/.env');
+        if (file_exists(__DIR__ . '/.env')) {
+            // Load environment variables from .env file
+            $dotenv = new \Symfony\Component\Dotenv\Dotenv();
+            $dotenv->loadEnv(__DIR__ . '/.env');
+        }
 
         $container->services()
         ->load('Soukicz\\SqlAiOptimizer\\', __DIR__ . '/src/*')
