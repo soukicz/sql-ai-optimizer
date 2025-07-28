@@ -2,6 +2,7 @@
 
 namespace Soukicz\SqlAiOptimizer\Tool;
 
+use Soukicz\Llm\Message\LLMMessageContents;
 use Soukicz\Llm\Tool\ToolDefinition;
 use Soukicz\Llm\Tool\ToolResponse;
 use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
@@ -34,7 +35,7 @@ class PerformanceSchemaQueryTool implements ToolDefinition {
         ];
     }
 
-    public function handle(array $input): ToolResponse {
-        return new ToolResponse($this->queryExecutor->executeQuery('performance_schema', $input['query'], $this->cacheDatabaseResults, 250));
+    public function handle(array $input): LLMMessageContents {
+        return LLMMessageContents::fromString($this->queryExecutor->executeQuery('performance_schema', $input['query'], $this->cacheDatabaseResults, 250));
     }
 }

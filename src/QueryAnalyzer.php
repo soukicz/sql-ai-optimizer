@@ -5,7 +5,7 @@ namespace Soukicz\SqlAiOptimizer;
 use Dibi\DriverException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
-use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude37Sonnet;
+use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude4Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
@@ -114,9 +114,9 @@ readonly class QueryAnalyzer {
             if (!isset($actualTableMap[$lookupKey])) {
                 continue; // Skip if table doesn't exist in the database
             }
-            
+
             $table = $actualTableMap[$lookupKey]; // Use the correctly cased table name
-            
+
             $schema = $this->analyzedDatabase->getConnection()
                 ->query('SHOW CREATE TABLE %n', $table)->fetch()['Create Table'];
 
@@ -178,9 +178,7 @@ readonly class QueryAnalyzer {
         EOT;
 
         return $this->sendConversation(new LLMConversation([
-            LLMMessage::createFromUser([
-                new LLMMessageText($prompt),
-            ]),
+            LLMMessage::createFromUserString($prompt),
         ]), $useDatabaseAccess)
         ->then(function (LLMResponse $response) use ($queryId) {
             $this->stateDatabase->updateConversation(
@@ -198,12 +196,12 @@ readonly class QueryAnalyzer {
         }
 
         $request = new LLMRequest(
-            model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
+            model: new AnthropicClaude4Sonnet(AnthropicClaude4Sonnet::VERSION_20250514),
             conversation: $conversation,
             temperature: 1.0,
             maxTokens: 50_000,
-            reasoningConfig: new ReasoningBudget(30_000),
-            tools: $tools
+            tools: $tools,
+            reasoningConfig: new ReasoningBudget(30_000)
         );
 
         return $this->llmChainClient->runAsync(
@@ -213,7 +211,7 @@ readonly class QueryAnalyzer {
     }
 
     public function continueConversation(LLMConversation $conversation, string $prompt, bool $useDatabaseAccess): PromiseInterface {
-        $newConversation = $conversation->withMessage(LLMMessage::createFromUser([new LLMMessageText($prompt)]));
+        $newConversation = $conversation->withMessage(LLMMessage::createFromUserString($prompt));
 
         return $this->sendConversation($newConversation, $useDatabaseAccess);
     }

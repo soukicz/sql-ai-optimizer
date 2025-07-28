@@ -99,9 +99,9 @@ readonly class QuerySelector {
         if (!empty($specialInstrutions)) {
             $prompt .= "\n\n**Special instructions:**\n\n" . $specialInstrutions;
         }
-      
+
         $conversation = new LLMConversation([
-            LLMMessage::createFromUser([new LLMMessageText($prompt)]),
+            LLMMessage::createFromUserString($prompt),
         ]);
 
         $response = $this->llmChainClient->run(
@@ -109,9 +109,9 @@ readonly class QuerySelector {
             request: new LLMRequest(
                 model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
                 conversation: $conversation,
-                tools: $tools,
                 temperature: 1.0,
                 maxTokens: 50_000,
+                tools: $tools,
                 reasoningConfig: new ReasoningBudget(20_000)
             ),
         );
@@ -132,8 +132,8 @@ readonly class QuerySelector {
 
         return new CandidateResult(
             description: $response->getLastText(),
-            conversation: $conversation,
             groups: $resultGroups,
+            conversation: $conversation,
             formattedConversation: $this->markdownFormatter->responseToMarkdown($response)
         );
     }
