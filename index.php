@@ -67,6 +67,7 @@ class Kernel extends BaseKernel {
             ->set(AnthropicClient::class)
             ->arg('$apiKey', '%env(ANTHROPIC_API_KEY)%')
             ->arg('$cache', new Reference(FileCache::class))
+            ->arg('$betaFeatures', ['interleaved-thinking-2025-05-14'])
             ->autowire()
             ->autoconfigure();
 
