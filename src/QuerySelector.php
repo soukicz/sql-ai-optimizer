@@ -10,6 +10,7 @@ use Soukicz\Llm\LLMConversation;
 use Soukicz\Llm\LLMRequest;
 use Soukicz\Llm\MarkdownFormatter;
 use Soukicz\Llm\Message\LLMMessage;
+use Soukicz\Llm\Message\LLMMessageContents;
 use Soukicz\Llm\Message\LLMMessageText;
 use Soukicz\Llm\Tool\CallbackToolDefinition;
 use Soukicz\SqlAiOptimizer\Result\CandidateQuery;
@@ -80,10 +81,10 @@ readonly class QuerySelector {
             name: 'submit_selection',
             description: 'Submit your selection of 20 most expensive queries',
             inputSchema: $submitInputSchema,
-            handler: function (array $input) use (&$groups): string {
+            handler: function (array $input) use (&$groups): LLMMessageContents {
                 $groups[] = $input;
 
-                return 'Selection submitted';
+                return LLMMessageContents::fromString('Selection submitted');
             }
         );
 
