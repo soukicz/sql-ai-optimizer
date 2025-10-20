@@ -4,7 +4,6 @@ namespace Soukicz\SqlAiOptimizer\Tool;
 
 use Soukicz\Llm\Message\LLMMessageContents;
 use Soukicz\Llm\Tool\ToolDefinition;
-use Soukicz\Llm\Tool\ToolResponse;
 use Soukicz\SqlAiOptimizer\Service\DatabaseQueryExecutor;
 
 class PerformanceSchemaQueryTool implements ToolDefinition {

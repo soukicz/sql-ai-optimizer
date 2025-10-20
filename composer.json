@@ -16,7 +16,7 @@
         "php": "^8.2",
         "ext-mysqli": "*",
         "ext-sqlite3": "*",
-        "soukicz/llm": "0.3",
+        "soukicz/llm": "dev-master",
         "symfony/framework-bundle": "^7.2",
         "symfony/runtime": "^7.2",
         "dibi/dibi": "^5.0",

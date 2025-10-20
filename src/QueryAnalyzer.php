@@ -5,7 +5,7 @@ namespace Soukicz\SqlAiOptimizer;
 use Dibi\DriverException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
-use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude4Sonnet;
+use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude45Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
@@ -196,7 +196,7 @@ readonly class QueryAnalyzer {
         }
 
         $request = new LLMRequest(
-            model: new AnthropicClaude4Sonnet(AnthropicClaude4Sonnet::VERSION_20250514),
+            model: new AnthropicClaude45Sonnet(AnthropicClaude45Sonnet::VERSION_20250929),
             conversation: $conversation,
             temperature: 1.0,
             maxTokens: 50_000,

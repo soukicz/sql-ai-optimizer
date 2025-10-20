@@ -3,7 +3,7 @@
 namespace Soukicz\SqlAiOptimizer;
 
 use Soukicz\Llm\Client\Anthropic\AnthropicClient;
-use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude37Sonnet;
+use Soukicz\Llm\Client\Anthropic\Model\AnthropicClaude45Sonnet;
 use Soukicz\Llm\Client\LLMChainClient;
 use Soukicz\Llm\Config\ReasoningBudget;
 use Soukicz\Llm\LLMConversation;
@@ -107,7 +107,7 @@ readonly class QuerySelector {
         $response = $this->llmChainClient->run(
             client: $this->llmClient,
             request: new LLMRequest(
-                model: new AnthropicClaude37Sonnet(AnthropicClaude37Sonnet::VERSION_20250219),
+                model: new AnthropicClaude45Sonnet(AnthropicClaude45Sonnet::VERSION_20250929),
                 conversation: $conversation,
                 temperature: 1.0,
                 maxTokens: 50_000,
